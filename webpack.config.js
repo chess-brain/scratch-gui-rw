@@ -81,17 +81,26 @@ const base = {
                 /node_modules[\\/]@vernier[\\/]godirect/,
                 /node_modules[\\/]domelementtype/,
                 /node_modules[\\/]domutils/,
-                /node_modules[\\/]react-markdown/
+                /node_modules[\\/]react-markdown/,
+                /node_modules[\\/]isomorphic-git/
             ],
             options: {
+                cacheDirectory: true,
                 // Explicitly disable babelrc so we don't catch various config
                 // in much lower dependencies.
                 babelrc: false,
                 plugins: [
                     ['react-intl', {
                         messagesDir: './translations/messages/'
-                    }]],
-                presets: ['@babel/preset-env', '@babel/preset-react']
+                    }]
+                ],
+                presets: [
+                    ['@babel/preset-env', {
+                        bugfixes: true,
+                        browserslistEnv: 'production'
+                    }],
+                    '@babel/preset-react'
+                ]
             }
         },
         {

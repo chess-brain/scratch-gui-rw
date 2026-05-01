@@ -21,7 +21,7 @@ const normalizeType = type => {
     return upper;
 };
 
-const getMessages = (ScratchBlocks, blockJson) => [
+const getMessages = (ScratchBlocks, blockJson, msgAny) => [
     ScratchBlocks.Msg,
     Object.fromEntries(
         blockJson.flatMap(b => {
@@ -36,7 +36,8 @@ const getMessages = (ScratchBlocks, blockJson) => [
             if (messages.length === 0) return [];
             return [[normalizedType, `${b.type.split('_', 1)[0]}: ${messages.join(' ')}`]];
         })
-    )
+    ),
+    msgAny
 ];
 
 const getColours = blockJson => Object.fromEntries(
@@ -574,7 +575,7 @@ export default class FindBarController {
 
         const blockJson = this.vm.runtime.getBlocksJSON();
         const colours = getColours(blockJson);
-        const messagesList = getMessages(this.ScratchBlocks, blockJson);
+        const messagesList = getMessages(this.ScratchBlocks, blockJson, this.msgAny);
 
         for (const proc of scratchBlocks) {
             const item = this.dropdown.addItem(proc, messagesList, colours);

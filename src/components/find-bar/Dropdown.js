@@ -104,7 +104,7 @@ export default class Dropdown {
         item.data = proc;
         const name = proc.procCode.toUpperCase();
         item.displayName = normalizeMessagePlaceholders(
-            messagesList[0][name] || messagesList[1][name] || proc.procCode
+            messagesList[0][name] || messagesList[1][name] || (messagesList[2] ? messagesList[2](`block-switching/${proc.procCode}`) : null) || proc.procCode
         );
 
         const colorIds = {
