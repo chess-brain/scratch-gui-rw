@@ -2780,7 +2780,7 @@ class MenuBar extends React.Component {
                                              this.props.onRequestCloseTools();
                                              this.props.onOpenExtensionManagerModal();
                                          }}
-                                         shortcut={formatShortcutDisplay('Ctrl+Alt+E')}
+                                         shortcut={formatShortcutDisplay('Alt+E')}
                                      >
                                         <FileCog />
                                         <FormattedMessage
