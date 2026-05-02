@@ -1220,11 +1220,17 @@ class MenuBar extends React.Component {
                 description: 'Prompt title for bookmark name',
                 id: 'tw.workspaceBookmarks.namePrompt'
             }),
-            `Bookmark ${this.state.workspaceBookmarks.length + 1}`
+            this.props.intl.formatMessage({
+                defaultMessage: 'Bookmark {number}',
+                id: 'tw.workspaceBookmarks.defaultName'
+            }, {number: this.state.workspaceBookmarks.length + 1})
         );
         if (name === null) return;
 
-        let category = 'General';
+        let category = this.props.intl.formatMessage({
+            defaultMessage: 'General',
+            id: 'tw.workspaceBookmarks.defaultCategory'
+        });
         if (enableCategories) {
             const categoryList = this.state.workspaceBookmarksCategories.join(', ');
             const categoryInput = await this.showPrompt(
@@ -1237,14 +1243,23 @@ class MenuBar extends React.Component {
                     description: 'Prompt for bookmark category',
                     id: 'tw.workspaceBookmarks.categoryPrompt'
                 }, {categories: categoryList}),
-                'General'
+                this.props.intl.formatMessage({
+                    defaultMessage: 'General',
+                    id: 'tw.workspaceBookmarks.defaultCategory'
+                })
             );
             if (categoryInput === null) return;
-            category = categoryInput.trim() || 'General';
+            category = categoryInput.trim() || this.props.intl.formatMessage({
+                defaultMessage: 'General',
+                id: 'tw.workspaceBookmarks.defaultCategory'
+            });
         }
 
         const bookmark = {
-            name: (name.trim() || `Bookmark ${this.state.workspaceBookmarks.length + 1}`),
+            name: (name.trim() || this.props.intl.formatMessage({
+                defaultMessage: 'Bookmark {number}',
+                id: 'tw.workspaceBookmarks.defaultName'
+            }, {number: this.state.workspaceBookmarks.length + 1})),
             category,
             state,
             timestamp: Date.now()
