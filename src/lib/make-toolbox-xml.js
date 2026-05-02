@@ -142,7 +142,45 @@ const motion = function (isInitialSetup, isStage, targetId, colors) {
         ${blockSeparator}
         <block id="${targetId}_xposition" type="motion_xposition"/>
         <block id="${targetId}_yposition" type="motion_yposition"/>
-        <block id="${targetId}_direction" type="motion_direction"/>`}
+        <block id="${targetId}_direction" type="motion_direction"/>
+        ${blockSeparator}
+        <label text="${translate("UNSUPPORT_TW_1","Blocks below do not support TurboWarp")}"></label>
+        <label text="${translate("UNSUPPORT_TW_2","And we highly discourage using them")}"></label>
+        <label text="${translate("UNSUPPORT_TW_3","They're keeping here only for compatibility with MistWarp")}"></label>
+        <block type="motion_pointtowards_xy" id="motion_pointtowards_xy">
+            <value name="X">
+                <shadow id="pointx" type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="Y">
+                <shadow id="pointy" type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+        </block>
+        <block type="motion_pointtowards_xyfrom" id="motion_pointtowards_xyfrom">
+            <value name="X">
+                <shadow id="pointx" type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="Y">
+                <shadow id="pointy" type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="FROMX">
+                <shadow id="pointx" type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="FROMY">
+                <shadow id="pointy" type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+        </block>`}
         ${categorySeparator}
     </category>
     `;
@@ -292,6 +330,11 @@ const looks = function (isInitialSetup, isStage, targetId, costumeName, backdrop
             <block id="${targetId}_costumenumbername" type="looks_costumenumbername"/>
             <block id="backdropnumbername" type="looks_backdropnumbername"/>
             <block id="${targetId}_size" type="looks_size"/>
+            ${blockSeparator}
+            <label text="${translate("UNSUPPORT_TW_1","Blocks below do not support TurboWarp")}"></label>
+            <label text="${translate("UNSUPPORT_TW_2","And we highly discourage using them")}"></label>
+            <label text="${translate("UNSUPPORT_TW_3","They're keeping here only for compatibility with MistWarp")}"></label>
+            <block id="${targetId}_costumes" type="looks_costumes"/>
         `}
         ${categorySeparator}
     </category>
@@ -453,6 +496,35 @@ const control = function (isInitialSetup, isStage, targetId, colors) {
             </block>
             <block type="control_delete_this_clone"/>
         `}
+        ${blockSeparator}
+        ${blockSeparator}
+        <label text="${translate("UNSUPPORT_TW_1","Blocks below do not support TurboWarp")}"></label>
+        <label text="${translate("UNSUPPORT_TW_2","And we highly discourage using them")}"></label>
+        <label text="${translate("UNSUPPORT_TW_3","They're keeping here only for compatibility with MistWarp")}"></label>
+        <block type="control_switch" id="control_switch">
+            <value name="VALUE">
+                <shadow type="text">
+                    <field name="TEXT"></field>
+                </shadow>
+            </value>
+        </block>
+        <block type="control_case" id="control_case">
+            <value name="VALUE">
+                <shadow type="text">
+                    <field name="TEXT"></field>
+                </shadow>
+            </value>
+        </block>
+        <block type="control_case_fallthrough" id="control_case_fallthrough">
+            <value name="VALUE">
+                <shadow type="text">
+                    <field name="TEXT"></field>
+                </shadow>
+            </value>
+        </block>
+        <block type="control_default" id="control_default"></block>
+        <block type="control_break" id="control_break"></block>
+        <block type="control_continue" id="control_continue"></block>
         ${categorySeparator}
     </category>
     `;
@@ -726,6 +798,12 @@ const operators = function (isInitialSetup, isStage, targetId, colors) {
                 </shadow>
             </value>
         </block>
+        ${blockSeparator}
+        <label text="${translate("UNSUPPORT_TW_1","Blocks below do not support TurboWarp")}"></label>
+        <label text="${translate("UNSUPPORT_TW_2","And we highly discourage using them")}"></label>
+        <label text="${translate("UNSUPPORT_TW_3","They're keeping here only for compatibility with MistWarp")}"></label>
+        <block type="operator_pi" id="operator_pi"></block>
+        <block type="operator_newline" id="operator_newline"></block>
         ${categorySeparator}
     </category>
     `;

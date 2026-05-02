@@ -176,9 +176,9 @@ const Footer = () => (
                     </a>
                 </div>
                 <div className={styles.footerSection}>
-                    <a href="https://packager.warp.mistium.com/">
+                    <a href="https://packager.02engine.org/">
                         {/* Do not translate */}
-                        {'MistWarp Packager'}
+                        {'02Engine Packager'}
                     </a>
                     <a href="https://docs.warp.mistium.com/embedding">
                         <FormattedMessage

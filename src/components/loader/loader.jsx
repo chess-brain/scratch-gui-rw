@@ -45,7 +45,6 @@ const messages = defineMessages({
     }
 });
 
-// Array of random loading messages
 const randomMessages = [
   "Also try TurboWarp!",
   "Also try MistWarp!",
@@ -54,8 +53,7 @@ const randomMessages = [
   "Also try AstraEditor!"
 ];
 
-// Because progress events are fired so often during the very performance-critical loading
-// process and React updates are very slow, we bypass React for updating the progress bar.
+const TYPE_STRING = '["ˍ"*/';
 
 class LoaderComponent extends React.Component {
     constructor (props) {
@@ -69,28 +67,81 @@ class LoaderComponent extends React.Component {
         this.barInnerEl = null;
         this.messageEl = null;
         this.ignoreProgress = false;
-        // Select a random message when the component is created
         this.randomMessage = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+        
+        this.state = {
+            displayText: TYPE_STRING,
+            typingPhase: 'display'
+        };
+        this.typingTimeout = null;
+        this.startTyping();
     }
+    
     componentDidMount () {
-        this.handleAssetProgress(
-            this.props.vm.runtime.finishedAssetRequests,
-            this.props.vm.runtime.totalAssetRequests
-        );
-        this.props.vm.on('ASSET_PROGRESS', this.handleAssetProgress);
-        this.props.vm.runtime.on('PROJECT_LOADED', this.handleProjectLoaded);
+        if (this.props.vm) {
+            this.handleAssetProgress(
+                this.props.vm.runtime.finishedAssetRequests,
+                this.props.vm.runtime.totalAssetRequests
+            );
+            this.props.vm.on('ASSET_PROGRESS', this.handleAssetProgress);
+            this.props.vm.runtime.on('PROJECT_LOADED', this.handleProjectLoaded);
+        }
     }
+    
     componentWillUnmount () {
-        this.props.vm.off('ASSET_PROGRESS', this.handleAssetProgress);
-        this.props.vm.runtime.off('PROJECT_LOADED', this.handleProjectLoaded);
+        if (this.props.vm) {
+            this.props.vm.off('ASSET_PROGRESS', this.handleAssetProgress);
+            this.props.vm.runtime.off('PROJECT_LOADED', this.handleProjectLoaded);
+        }
+        if (this.typingTimeout) {
+            clearTimeout(this.typingTimeout);
+        }
     }
+    
+    startTyping = () => {
+        if (this.typingTimeout) {
+            clearTimeout(this.typingTimeout);
+        }
+        
+        this.setState({
+            displayText: '',
+            typingPhase: 'typing'
+        });
+        
+        let charIndex = 0;
+        
+        const typeChar = () => {
+            charIndex++;
+            if (charIndex <= TYPE_STRING.length) {
+                this.setState({
+                    displayText: TYPE_STRING.substring(0, charIndex)
+                });
+                this.typingTimeout = setTimeout(typeChar, 150);
+            } else {
+                this.setState({
+                    typingPhase: 'display'
+                });
+                this.typingTimeout = setTimeout(() => {
+                    this.setState({
+                        displayText: '',
+                        typingPhase: 'erase'
+                    });
+                    this.typingTimeout = setTimeout(() => {
+                        this.startTyping();
+                    }, 500);
+                }, 1000);
+            }
+        };
+        
+        this.typingTimeout = setTimeout(typeChar, 300);
+    }
+    
     handleAssetProgress (finished, total) {
         if (this.ignoreProgress || !this.barInnerEl || !this.messageEl) {
             return;
         }
 
         if (total === 0) {
-            // Started loading a new project.
             this.barInnerEl.style.width = '0';
             this.messageEl.textContent = this.props.intl.formatMessage(messages.projectData);
         } else {
@@ -124,6 +175,10 @@ class LoaderComponent extends React.Component {
                 })}
             >
                 <div className={styles.container}>
+                    <div className={styles.typingText}>
+                        {this.state.displayText}
+                    </div>
+                    
                     <div className={styles.blockAnimation}>
                         <img
                             className={styles.topBlock}
