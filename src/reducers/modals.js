@@ -36,6 +36,10 @@ const MODAL_SUPER_REFACTOR = 'superRefactorModal';
 const MODAL_TUTORIAL = 'tutorialModal';
 const MODAL_VIDEO = 'videoModal';
 const MODAL_GANDI_HELP = 'gandiHelpModal';
+const MODAL_CUSTOM_THEME = 'customtheme';
+const MODAL_README = 'readme';
+const MODAL_PREVIEW_EXT = 'previewExt';
+const MODAL_AE_FEATURES = 'aeFeaturesModal';
 
 const initialState = {
     [MODAL_BACKDROP_LIBRARY]: false,
@@ -72,6 +76,10 @@ const initialState = {
     [MODAL_TUTORIAL]: false,
     [MODAL_VIDEO]: false,
     [MODAL_GANDI_HELP]: false,
+    [MODAL_CUSTOM_THEME]: false,
+    [MODAL_README]: false,
+    [MODAL_PREVIEW_EXT]: false,
+    [MODAL_AE_FEATURES]: false,
     extensionLoadChoiceData: null,
     videoModalData: null
 };
@@ -349,6 +357,30 @@ const openSuperRefactorModal = function () {
 const closeSuperRefactorModal = function () {
     return closeModal(MODAL_SUPER_REFACTOR);
 };
+const openCustomTheme = function () {
+    return openModal(MODAL_CUSTOM_THEME);
+};
+const closeCustomTheme = function () {
+    return closeModal(MODAL_CUSTOM_THEME);
+};
+const openReadme = function () {
+    return openModal(MODAL_README);
+};
+const closeReadme = function() {
+    return closeModal(MODAL_README);
+}
+const openPreviewExt = function () {
+    return openModal(MODAL_PREVIEW_EXT);
+};
+const closePreviewExt = function () {
+    return closeModal(MODAL_PREVIEW_EXT);
+};
+const openAeFeaturesModal = function () {
+    return openModal(MODAL_AE_FEATURES);
+};
+const closeAeFeaturesModal = function () {
+    return closeModal(MODAL_AE_FEATURES);
+};
 export {
     reducer as default,
     initialState as modalsInitialState,
@@ -420,6 +452,14 @@ export {
     closeExtensionEditorModal,
     openSuperRefactorModal,
     closeSuperRefactorModal,
+    openCustomTheme,
+    closeCustomTheme,
+    openReadme,
+    closeReadme,
+    openPreviewExt,
+    closePreviewExt,
+    openAeFeaturesModal,
+    closeAeFeaturesModal,
     MODAL_GANDI_HELP,
     MODAL_WARPTHEME,
     MODAL_EXTENSION_EDITOR,
