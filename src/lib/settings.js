@@ -7,7 +7,7 @@ export class AESettings {
                         enableHTMLSupportInREADME: false,
                         skipExtWarn: false,
                         EnableExtensionPreview: false,
-                        EnableVSCodeLayout: true,
+                        EnableVSCodeLayout: false,
                         EnableMobileLayout: false,
                         EnableMobileTouchDrag: false
                 };

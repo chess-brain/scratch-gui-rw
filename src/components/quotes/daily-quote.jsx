@@ -7,6 +7,7 @@ import SettingsStore from '../../addons/settings-store-singleton';
 const LOCAL_KEY_INTERVAL = 'dailyQuoteInterval';
 const LOCAL_KEY_QUOTES = 'dailyQuoteCustomQuotes';
 const LOCAL_KEY_MODE = 'dailyQuoteDisplayMode';
+const LOCAL_KEY_POSITION = 'dailyQuotePosition';
 
 const defaultInterval = 5; // seconds
 const defaultMode = 'sequential'; // 'sequential' or 'random'
@@ -192,7 +193,7 @@ const loadSettings = () => {
 
 const DailyQuote = ({alertsList}) => {
     const settings = loadSettings();
-    
+
     const [lines, setLines] = useState(settings.quotes);
     const [index, setIndex] = useState(0);
     const [intervalSec, setIntervalSec] = useState(settings.interval);
@@ -200,6 +201,93 @@ const DailyQuote = ({alertsList}) => {
     const [currentQuote, setCurrentQuote] = useState(settings.quotes[0] || '');
     const timerRef = useRef(null);
     const usedIndexesRef = useRef([]);
+    const dragRef = useRef(null);
+    const isDragging = useRef(false);
+    const dragOffset = useRef({x: 0, y: 0});
+
+    const loadPosition = () => {
+        try {
+            const stored = window.localStorage.getItem(LOCAL_KEY_POSITION);
+            if (stored) {
+                const pos = JSON.parse(stored);
+                if (pos && typeof pos.left === 'number' && typeof pos.top === 'number' &&
+                    pos.left >= 0 && pos.top >= 0 &&
+                    pos.left < window.innerWidth && pos.top < window.innerHeight) {
+                    return pos;
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
+        window.localStorage.removeItem(LOCAL_KEY_POSITION);
+        return {left: 10, top: 60};
+    };
+
+    const [position, setPosition] = useState(loadPosition);
+
+    const handleMouseDown = useCallback((e) => {
+        if (e.target === dragRef.current) {
+            isDragging.current = true;
+            dragOffset.current = {
+                x: e.clientX - position.left,
+                y: e.clientY - position.top
+            };
+            e.preventDefault();
+        }
+    }, [position]);
+
+    const handleMouseMove = useCallback((e) => {
+        if (isDragging.current) {
+            let newLeft = e.clientX - dragOffset.current.x;
+            let newTop = e.clientY - dragOffset.current.y;
+
+            const checkElementAtPosition = (x, y) => {
+                const el = document.elementFromPoint(x, y);
+                if (!el) return false;
+                const style = window.getComputedStyle(el);
+                if (style.pointerEvents === 'none') return false;
+                if (el.closest && el.closest('[data-not-draggable]')) return false;
+                return true;
+            };
+
+            const minTop = 60;
+            const checkPoints = [
+                {x: newLeft + 50, y: newTop + 15},
+                {x: newLeft + 50, y: newTop + 30},
+            ];
+
+            let allValid = true;
+            for (const pt of checkPoints) {
+                if (!checkElementAtPosition(pt.x, pt.y)) {
+                    allValid = false;
+                    break;
+                }
+            }
+
+            if (allValid) {
+                newLeft = Math.max(0, newLeft);
+                newTop = Math.max(minTop, newTop);
+                newTop = Math.min(window.innerHeight - 40, newTop);
+                setPosition({left: newLeft, top: newTop});
+            }
+        }
+    }, []);
+
+    const handleMouseUp = useCallback(() => {
+        if (isDragging.current) {
+            isDragging.current = false;
+            window.localStorage.setItem(LOCAL_KEY_POSITION, JSON.stringify(position));
+        }
+    }, [position]);
+
+    useEffect(() => {
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [handleMouseMove, handleMouseUp]);
 
     // determine whether a saving/saved alert is present
     const hasSaveAlert = alertsList && alertsList.some(a => (
@@ -292,7 +380,16 @@ const DailyQuote = ({alertsList}) => {
     if (!enabled) return null;
 
     return (
-        <div className={styles.container} title="日常一句">
+        <div
+            className={styles.container}
+            style={{left: position.left, top: position.top}}
+            onMouseDown={handleMouseDown}
+            title="日常一句"
+        >
+            <div
+                ref={dragRef}
+                className={styles.dragHandle}
+            />
             <span className={styles.text}>{currentQuote}</span>
             <button
                 className={styles.settings}

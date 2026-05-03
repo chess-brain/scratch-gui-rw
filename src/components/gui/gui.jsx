@@ -251,9 +251,15 @@ const GUIComponent = props => {
     const [donationCount, setDonationCount] = useState(0);
     const [multiWorkspacesEnabled, setMultiWorkspacesEnabled] = useState(() => {
         try {
-            return localStorage.getItem('mw:multi-workspaces') === 'true';
+            const stored = localStorage.getItem('mw:multi-workspaces');
+            if (stored === null) {
+                // 首次访问，默认启用多工作区
+                localStorage.setItem('mw:multi-workspaces', 'true');
+                return true;
+            }
+            return stored === 'true';
         } catch (e) {
-            return false;
+            return true;
         }
     });
     

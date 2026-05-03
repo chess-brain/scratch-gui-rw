@@ -3,11 +3,33 @@
     align-items: center;
     gap: 8px;
     padding: 4px 8px;
+    padding-left: 0;
     color: #1a1a1a;
     background: rgba(255,255,255,0.9);
     border-radius: 4px;
     font-size: 13px;
     pointer-events: auto;
+    position: fixed;
+    z-index: 9999;
+    left: 10px;
+    top: 60px;
+}
+.dragHandle {
+    width: 6px;
+    height: 100%;
+    min-height: 24px;
+    background: #888;
+    border-radius: 3px 0 0 3px;
+    cursor: grab;
+    flex-shrink: 0;
+    user-select: none;
+}
+.dragHandle:active {
+    cursor: grabbing;
+    background: #666;
+}
+.dragHandle:hover {
+    background: #999;
 }
 .text {
     white-space: nowrap;
