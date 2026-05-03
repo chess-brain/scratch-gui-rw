@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, defineMessages} from 'react-intl';
 import {connect} from 'react-redux';
 
 import {Check} from 'lucide-react';
@@ -12,6 +12,10 @@ import {openAccentMenu, accentMenuOpen, closeSettingsMenu} from '../../reducers/
 import {setTheme} from '../../reducers/theme.js';
 import {applyTheme} from '../../lib/themes/themePersistance.js';
 import styles from './settings-menu.css';
+
+import {openCustomTheme} from '../../reducers/modals.js';
+
+import {closeEditMenu} from '../../reducers/menus.js';
 
 // Keep the original accent messages for FormattedMessage component
 const ACCENT_MESSAGES = {};
@@ -30,7 +34,7 @@ for (const key in ACCENT_MAP) {
 }
 
 const icons = {
-
+    rainbow: null // We don't have a rainbow icon yet, but we can add it later
 };
 
 const ColorIcon = props => {
@@ -43,8 +47,19 @@ const ColorIcon = props => {
                 className={styles.accentIconOuter}
                 src={icons[accentId]}
                 draggable={false}
-                // Image is decorative
                 alt=""
+            />
+        );
+    }
+    
+    if (accentId === 'custom') {
+        return (
+            <div
+                className={styles.accentIconOuter}
+                style={{
+                    backgroundColor: '#ff6b6b',
+                    backgroundImage: 'none'
+                }}
             />
         );
     }
@@ -54,7 +69,6 @@ const ColorIcon = props => {
             <div
                 className={styles.accentIconOuter}
                 style={{
-                    // menu-bar-background is var(...), don't want to evaluate with the current values
                     backgroundColor: accent.guiColors['looks-secondary'],
                     backgroundImage: accent.guiColors['menu-bar-background-image']
                 }}
@@ -62,7 +76,6 @@ const ColorIcon = props => {
         );
     }
     
-    // Fallback to a default style if accent is not found
     return (
         <div
             className={styles.accentIconOuter}
@@ -79,17 +92,11 @@ ColorIcon.propTypes = {
 };
 
 const AccentMenuItem = props => (
-    <MenuItem
-        onClick={props.onClick}
-        title={ACCENT_MESSAGES[props.id].defaultMessage}
-        aria-label={ACCENT_MESSAGES[props.id].defaultMessage}
-    >
+    <MenuItem onClick={props.onClick}>
         <div className={styles.option}>
             <Check className={classNames(styles.check, {[styles.selected]: props.isSelected})} />
             <ColorIcon id={props.id} />
-            <span className={styles.accentLabel}>
-                <FormattedMessage {...ACCENT_MESSAGES[props.id]} />
-            </span>
+            <FormattedMessage {...ACCENT_MESSAGES[props.id]} />
         </div>
     </MenuItem>
 );
@@ -105,6 +112,7 @@ const AccentThemeMenu = ({
     isRtl,
     onChangeTheme,
     onOpen,
+    onClickCustomThemeModal,
     theme
 }) => (
     <MenuItem expanded={isOpen}>
@@ -116,7 +124,7 @@ const AccentThemeMenu = ({
             <span className={styles.submenuLabel}>
                 <FormattedMessage
                     defaultMessage="Accent"
-                    description="Label for menu to choose accent color (eg. TurboWarp's red, Scratch's purple)"
+                    description="Label for menu to choose accent color"
                     id="tw.menuBar.accent"
                 />
             </span>
@@ -131,10 +139,19 @@ const AccentThemeMenu = ({
                     key={item}
                     id={item}
                     isSelected={theme.accent === item}
-                    // eslint-disable-next-line react/jsx-no-bind
                     onClick={() => onChangeTheme(theme.set('accent', item))}
                 />
             ))}
+            <MenuItem onClick={onClickCustomThemeModal}>
+                <div className={styles.option}>
+                    <ColorIcon id="custom" />
+                    <FormattedMessage
+                        defaultMessage="Custom"
+                        description="Custom theme option"
+                        id="tw.accent.custom"
+                    />
+                </div>
+            </MenuItem>
         </Submenu>
     </MenuItem>
 );
@@ -143,6 +160,7 @@ AccentThemeMenu.propTypes = {
     isOpen: PropTypes.bool,
     isRtl: PropTypes.bool,
     onChangeTheme: PropTypes.func,
+    onClickCustomThemeModal: PropTypes.func,
     onOpen: PropTypes.func,
     theme: PropTypes.instanceOf(Theme)
 };
@@ -159,7 +177,11 @@ const mapDispatchToProps = dispatch => ({
         dispatch(closeSettingsMenu());
         applyTheme(theme);
     },
-    onOpen: () => dispatch(openAccentMenu())
+    onOpen: () => dispatch(openAccentMenu()),
+    onClickCustomThemeModal: () => {
+        dispatch(closeEditMenu());
+        dispatch(openCustomTheme());
+    },
 });
 
 export default connect(

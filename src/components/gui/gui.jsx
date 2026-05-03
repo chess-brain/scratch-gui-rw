@@ -63,6 +63,10 @@ import BilmeModal from '../../containers/bl-bilme-modal.jsx';
 import GandiHelp from '../gandi-help/gandi-help.jsx';
 import AEReadMe from '../../containers/ae-readme.jsx'
 import { loadData } from '../ae-readme/ae-readme.jsx'
+import CustomThemeModal from '../../containers/tw-custom-theme-modal.jsx';
+import AeFeaturesModal from '../../containers/ae-features-modal.jsx';
+import version from '../../lib/ae-version.js';
+import { openAeFeaturesModal, openReadme } from '../../reducers/modals.js';
 
 const Settings = new AESettings();
 import AddonHooks from '../../addons/hooks.js';
@@ -367,6 +371,11 @@ const GUIComponent = props => {
         onLoadingFailed,
         onSetProjectTitle,
         loadingState,
+        // AstraEditor features
+        customThemeVisible,
+        readmeModalVisible,
+        onOpenReadme,
+        aeFeaturesModalVisible,
         ...componentProps
     } = omit(props, 'dispatch');
     
@@ -825,7 +834,16 @@ const GUIComponent = props => {
         };
     }, [onStartSelectingFileUpload, onClickPackager, vm, props.dispatch]);
 
-
+    // 显示AE特性MODAL
+    useEffect(() => {
+        if (!localStorage.getItem('ae:firstEnter') || localStorage.getItem('ae:lastVersion') !== version.version || localStorage.getItem('ae:webBuild') !== version.webBuild) {
+            try {
+                props.dispatch(openAeFeaturesModal());
+            } catch (e) {
+                // ignore
+            }
+        }
+    }, [props.dispatch]);
 
     const tabClassNames = useMemo(() => ({
         tabs: styles.tabs,
@@ -886,6 +904,9 @@ const GUIComponent = props => {
             <BilmeModal />
             {onboardingVisible && <Onboarding />}
             {props.gandiHelpModal && <GandiHelp onClose={() => props.dispatch && props.dispatch({type: 'scratch-gui/modals/CLOSE_MODAL', modal: 'gandiHelpModal'})} />}
+            {customThemeVisible && <CustomThemeModal />}
+            {readmeModalVisible && <AEReadMe />}
+            {aeFeaturesModalVisible && <AeFeaturesModal />}
         </React.Fragment>
     ), [
         securityManager,
@@ -901,7 +922,10 @@ const GUIComponent = props => {
         gitModalVisible,
         shortcutManagerModalVisible,
         onboardingVisible,
-        props.gandiHelpModal
+        props.gandiHelpModal,
+        customThemeVisible,
+        readmeModalVisible,
+        aeFeaturesModalVisible
     ]);
 
     const minDimensions = useMemo(() => ({
@@ -1368,6 +1392,11 @@ GUIComponent.propTypes = {
     invalidProjectModalVisible: PropTypes.bool,
     gitModalVisible: PropTypes.bool,
     gandiHelpModal: PropTypes.bool,
+    // AstraEditor features
+    customThemeVisible: PropTypes.bool,
+    readmeModalVisible: PropTypes.bool,
+    onOpenReadme: PropTypes.func,
+    aeFeaturesModalVisible: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired
 };
 GUIComponent.defaultProps = {
@@ -1407,13 +1436,18 @@ const mapStateToProps = state => ({
     extensionLoadChoiceModalVisible: state.scratchGui.modals.extensionLoadChoiceModal,
     extensionLoadChoiceData: state.scratchGui.modals.extensionLoadChoiceData,
     gandiHelpModal: state.scratchGui.modals.gandiHelpModal,
-    editingTarget: state.scratchGui.targets && state.scratchGui.targets.editingTarget
+    editingTarget: state.scratchGui.targets && state.scratchGui.targets.editingTarget,
+    // AstraEditor features
+    customThemeVisible: state.scratchGui.modals.customtheme,
+    readmeModalVisible: state.scratchGui.modals.readme,
+    aeFeaturesModalVisible: state.scratchGui.modals.aeFeaturesModal
 });
 
 const mapDispatchToProps = dispatch => ({
     dispatch: dispatch,
     onSetStageSize: stageSize => dispatch(setStageSize(stageSize)),
-    onOpenOnboarding: () => dispatch(showOnboarding())
+    onOpenOnboarding: () => dispatch(showOnboarding()),
+    onOpenReadme: () => dispatch(openReadme())
 });
 
 export default injectIntl(connect(

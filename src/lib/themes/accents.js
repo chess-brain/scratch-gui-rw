@@ -10,7 +10,11 @@ import * as accentPaleBlue from './accent/pale-blue';
 import * as accentEggplantPurple from './accent/eggplant-purple';
 import * as accentPink from './accent/pink';
 import * as accentAE from './accent/ae';
+import * as accentAstraEditor from './accent/astraeditor';
 import * as accent02 from './accent/02e';
+import * as accentCE from './accent/ce';
+import * as accentMiku from './accent/miku';
+import * as accentTY from './accent/ty';
 
 const ACCENTS = [
     {
@@ -80,9 +84,9 @@ const ACCENTS = [
         id: 'tw.accent.pink'
     },
     {
-        name: 'AE',
-        accent: accentAE,
-        description: 'AE accent color',
+        name: 'AstraEditor',
+        accent: accentAstraEditor,
+        description: 'AstraEditor accent color',
         id: 'tw.accent.ae'
     },
     {
@@ -90,6 +94,24 @@ const ACCENTS = [
         accent: accent02,
         description: '02 accent color',
         id: 'tw.accent.02e'
+    },
+    {
+        name: 'CyberExplorer Pink',
+        accent: accentCE,
+        description: 'CyberExplorer Pink accent color',
+        id: 'tw.accent.ce'
+    },
+    {
+        name: 'Miku Green',
+        accent: accentMiku,
+        description: 'Miku Green accent color',
+        id: 'tw.accent.miku'
+    },
+    {
+        name: 'Tianyi Blue',
+        accent: accentTY,
+        description: 'Tianyi Blue accent color',
+        id: 'tw.accent.ty'
     }
 ];
 
