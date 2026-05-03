@@ -20,6 +20,12 @@ class UsernameModal extends React.Component {
     constructor (props) {
         super(props);
 
+        // 处理多工作区默认值
+        const multiWorkspacesStored = localStorage.getItem('mw:multi-workspaces');
+        if (multiWorkspacesStored === null) {
+            localStorage.setItem('mw:multi-workspaces', 'true');
+        }
+
         this.state = {
             optimizeAnimations: localStorage.getItem('mw:optimize-animations') === 'true',
             debugMode: localStorage.getItem('mw:debug-mode') === 'true',
