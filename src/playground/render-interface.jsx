@@ -32,6 +32,7 @@ import SettingsStore from '../addons/settings-store-singleton';
 import '../lib/api/fix-history.js';
 import GUI from './render-gui.jsx';
 import MenuBar from '../components/menu-bar/menu-bar.jsx';
+import SecurityBanner from '../components/tw-security-banner/security-banner.jsx';
 import ProjectInput from '../components/tw-project-input/project-input.jsx';
 import FeaturedProjects from '../components/tw-featured-projects/featured-projects.jsx';
 import Description from '../components/tw-description/description.jsx';
@@ -314,6 +315,7 @@ class Interface extends React.Component {
                 })}
                 dir={isRtl ? 'rtl' : 'ltr'}
             >
+                <SecurityBanner />
                 {isHomepage ? (
                     <div className={styles.menu}>
                         <WrappedMenuBar
