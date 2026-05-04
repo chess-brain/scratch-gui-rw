@@ -175,7 +175,7 @@ export default [
             />
         ),
         extensionId: 'faceSensing',
-        extensionURL: '/extensions/turbowarp/lab/face-sensing.js',
+        extensionURL: 'https://rw-extensions.pages.dev/turbowarp/lab/face-sensing.js',
         iconURL: faceSensingIconURL,
         insetIconURL: faceSensingInsetIconURL,
         description: (
