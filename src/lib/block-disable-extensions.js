@@ -4,68 +4,88 @@ const initializeBlockDisableExtension = vm => {
     if (copyJsCodeExtensionInitialized) return;
     copyJsCodeExtensionInitialized = true;
 
-    console.log('Initializing Copy JS Code extension with VM:', vm);
+    console.log('[CopyJSCode] Initializing Copy JS Code extension with VM:', vm);
     
-    const Blockly = window.Blockly || window.ScratchBlocks;
-    if (!Blockly || !Blockly.BlockSvg || !Blockly.BlockSvg.prototype.showContextMenu_) {
-        console.warn('Blockly not available, cannot initialize Copy JS Code extension');
-        return;
-    }
-
-    const originalShowContextMenu = Blockly.BlockSvg.prototype.showContextMenu_;
-    Blockly.BlockSvg.prototype.showContextMenu_ = function(e) {
-        if (this.workspace.options.readOnly || !this.contextMenu) {
-            return originalShowContextMenu.call(this, e);
-        }
-
-        const menuOptions = [];
-        
-        const isHatBlock = !this.getPreviousBlock();
-        console.log('Checking Copy JS Code option:', {
-            blockId: this.id,
-            blockType: this.type,
-            isHatBlock: isHatBlock,
-            hasGetBlockCompiledSource: !!vm.getBlockCompiledSource
+    const tryInitialize = () => {
+        const ScratchBlocks = window.ScratchBlocks || window.Blockly;
+        console.log('[CopyJSCode] Checking ScratchBlocks/Blockly:', {
+            hasScratchBlocks: !!window.ScratchBlocks,
+            hasBlockly: !!window.Blockly,
+            ScratchBlocks: ScratchBlocks
         });
 
-        if (isHatBlock && vm.getBlockCompiledSource) {
-            menuOptions.push({
-                enabled: true,
-                text: 'Copy JS Code',
-                callback: () => {
-                    try {
-                        const jsCode = vm.getBlockCompiledSource(this.id);
-                        if (jsCode) {
-                            navigator.clipboard.writeText(jsCode).then(() => {
-                                console.log('JavaScript code copied to clipboard:', jsCode);
-                                if (window.addon && window.addon.tab && window.addon.tab.redux && window.addon.tab.redux.dispatch) {
-                                    window.addon.tab.redux.dispatch({
-                                        type: 'alerts/addAlert',
-                                        message: 'JavaScript code copied to clipboard',
-                                        alertType: 'info'
-                                    });
-                                }
-                            }).catch(err => {
-                                console.error('Failed to copy to clipboard:', err);
-                            });
-                        } else {
-                            console.warn('No compiled JavaScript code available for block:', this.id);
-                        }
-                    } catch (error) {
-                        console.error('Error getting compiled JavaScript code:', error);
-                    }
-                },
-                separator: true
-            });
+        if (!ScratchBlocks) {
+            console.warn('[CopyJSCode] ScratchBlocks/Blockly not available yet, retrying...');
+            setTimeout(tryInitialize, 100);
+            return;
         }
 
-        if (this.customContextMenu) {
-            this.customContextMenu(menuOptions);
+        if (!ScratchBlocks.ContextMenu || !ScratchBlocks.ContextMenu.show) {
+            console.warn('[CopyJSCode] ContextMenu not available yet, retrying...');
+            setTimeout(tryInitialize, 100);
+            return;
         }
-        
-        Blockly.ContextMenu.show(e, menuOptions, this.RTL);
-        Blockly.ContextMenu.currentBlock = this;
+
+        console.log('[CopyJSCode] Patching ScratchBlocks.ContextMenu.show');
+        const originalShow = ScratchBlocks.ContextMenu.show;
+        ScratchBlocks.ContextMenu.show = function (event, items, rtl) {
+            console.log('[CopyJSCode] Patched ContextMenu.show called');
+            
+            const gesture = ScratchBlocks.mainWorkspace && ScratchBlocks.mainWorkspace.currentGesture_;
+            const block = gesture && gesture.targetBlock_;
+            
+            if (block) {
+                console.log('[CopyJSCode] Context menu for block:', {
+                    blockId: block.id,
+                    blockType: block.type
+                });
+
+                const isHatBlock = !block.getPreviousBlock();
+                console.log('[CopyJSCode] Checking conditions:', {
+                    isHatBlock: isHatBlock,
+                    hasGetBlockCompiledSource: !!vm.getBlockCompiledSource
+                });
+                
+                if (isHatBlock && vm.getBlockCompiledSource) {
+                    console.log('[CopyJSCode] Adding Copy JS Code menu item');
+                    items.push({
+                        enabled: true,
+                        text: 'Copy JS Code',
+                        callback: () => {
+                            try {
+                                const jsCode = vm.getBlockCompiledSource(block.id);
+                                if (jsCode) {
+                                    navigator.clipboard.writeText(jsCode).then(() => {
+                                        console.log('[CopyJSCode] JavaScript code copied to clipboard:', jsCode);
+                                        if (window.addon && window.addon.tab && window.addon.tab.redux && window.addon.tab.redux.dispatch) {
+                                            window.addon.tab.redux.dispatch({
+                                                type: 'alerts/addAlert',
+                                                message: 'JavaScript code copied to clipboard',
+                                                alertType: 'info'
+                                            });
+                                        }
+                                    }).catch(err => {
+                                        console.error('[CopyJSCode] Failed to copy to clipboard:', err);
+                                    });
+                                } else {
+                                    console.warn('[CopyJSCode] No compiled JavaScript code available for block:', block.id);
+                                }
+                            } catch (error) {
+                                console.error('[CopyJSCode] Error getting compiled JavaScript code:', error);
+                            }
+                        },
+                        separator: true
+                    });
+                }
+            }
+            
+            return originalShow.call(this, event, items, rtl);
+        };
+
+        console.log('[CopyJSCode] Extension initialized successfully');
     };
+
+    tryInitialize();
 };
 
 export default initializeBlockDisableExtension;
