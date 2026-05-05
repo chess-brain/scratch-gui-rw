@@ -32,7 +32,7 @@ const manifest = {
     "new",
     "astraeditor"
   ],
-  "enabledByDefault": false,
+  "enabledByDefault": true,
   "l10n": {
     "defaultLocale": "en",
     "locales": ["en", "zh-cn"]

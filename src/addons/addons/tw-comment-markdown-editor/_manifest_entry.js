@@ -21,7 +21,7 @@ const manifest = {
         }
     ],
     dynamicDisable: true,
-    enabledByDefault: false,
+    enabledByDefault: true,
     permissions: [
         "vm",
         "tab"
