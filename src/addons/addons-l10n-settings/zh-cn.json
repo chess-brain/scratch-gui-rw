@@ -489,6 +489,8 @@
   "todo-list/@description": "在编辑器中添加待办列表功能，帮助你管理项目任务和进度。",
   "block-pins/@name": "积木置顶",
   "block-pins/@description": "将常用积木固定到工具箱顶部，方便快速访问。",
+  "block-pins/@info-checkbox-notice": "警告：带有复选框的置顶积木在勾选时可能会出现异常行为。",
+  "block-pins/@settings-name-autoLoadExts": "从置顶积木自动加载扩展",
   "tw-comment-markdown-editor/@name": "注释 Markdown 编辑器",
   "tw-comment-markdown-editor/@description": "为注释框添加 Markdown 编辑和预览功能，支持标题、粗体、代码等语法，使用 Ctrl+M 快速切换编辑和预览模式。",
   "bookmark/@name": "书签",
