@@ -1,18 +1,14 @@
-export default async function({ addon, msg }) {
-  const vm = addon.tab.traps.vm;
+// Block Pinning
+// By: SharkPool
 
-  let Blockly = null;
-  try {
-    Blockly = await addon.tab.traps.getBlockly();
-  } catch (e) {
-    console.warn("Block Pins Addon: Could not get Blockly", e);
-    return;
-  }
+export default async function({ addon, msg }) {
+  const Blockly = await addon.tab.traps.getBlockly();
+  const vm = addon.tab.traps.vm;
 
   const categoryIcon = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MC42OTIiIGhlaWdodD0iNzAuNjkyIiB2aWV3Qm94PSIwIDAgNzAuNjkyIDcwLjY5MiI+PHBhdGggZD0iTTAgMzUuMzQ2QzAgMTUuODI1IDE1LjgyNSAwIDM1LjM0NiAwczM1LjM0NiAxNS44MjUgMzUuMzQ2IDM1LjM0Ni0xNS44MjUgMzUuMzQ2LTM1LjM0NiAzNS4zNDZTMCA1NC44NjcgMCAzNS4zNDYiIGZpbGw9IiNjNWJmOTYiLz48cGF0aCBkPSJNNC42NTYgMzUuMzQ2YzAtMTYuOTUgMTMuNzQtMzAuNjkgMzAuNjktMzAuNjlzMzAuNjkgMTMuNzQgMzAuNjkgMzAuNjktMTMuNzQgMzAuNjktMzAuNjkgMzAuNjktMzAuNjktMTMuNzQtMzAuNjktMzAuNjkiIGZpbGw9IiNmZmY3YzIiLz48cGF0aCBkPSJNNDguOTU2IDQ0LjAwMyA1MSA1MC4wMmwtNi4wMTctMi4wNDVMMzQuMTY4IDM3LjE2Yy0xLjg3MyAxLjY1NS02LjAwNyA1LjE1MS03LjMwMyA1LjAxOS0yLjM4Ny0uMjQ0LTEuODg5LTIuOTQ3LTIuMDQ4LTUuMzc2LS4xNTgtMi40MyAxLjQ3MS0zLjQ0IDEuNDcxLTMuNDRsLTUuODc5LTUuODhhMi40NSAyLjQ1IDAgMCAxIDAtMy40NjFsNC42MzMtNC42MzNhMi40NSAyLjQ1IDAgMCAxIDMuNDYxIDBsNi4wNyA2LjA3czIuMTQ5LTIuMDAzIDMuOTAyLTJjMS43NTMuMDAyIDUuNjY0LjA3NSA1LjMyMyAyLjAxMy0uMjM1IDEuMzMyLTQuMTExIDUuOTYtNS42MzkgNy43MzV6IiBmaWxsPSIjNDQ1MjczIi8+PC9zdmc+";
 
   const category = document.createElementNS("http://www.w3.org/1999/xml", "category");
-  category.setAttribute("name", msg("pinned", "置顶"));
+  category.setAttribute("name", msg("pinned"));
   category.setAttribute("id", "pinned");
   category.setAttribute("colour", "#ffffff");
   category.setAttribute("secondaryColour", "#ffffff");
@@ -21,25 +17,8 @@ export default async function({ addon, msg }) {
   const gap = document.createElementNS("http://www.w3.org/1999/xml", "sep");
   gap.setAttribute("gap", "36");
 
-  let populateInit = 0;
+  let populateInit = 0; // counts up to 3, any 'populate' call while this is less than 3 will update the toolbox
   let pins = loadPins();
-
-  const getMainWorkspace = () => {
-    if (!Blockly || !Blockly.mainWorkspace) {
-      return null;
-    }
-    return Blockly.mainWorkspace;
-  };
-
-  const getToolbox = () => {
-    const ws = getMainWorkspace();
-    return ws ? ws.getToolbox() : null;
-  };
-
-  const getFlyout = () => {
-    const ws = getMainWorkspace();
-    return ws ? ws.getFlyout() : null;
-  };
 
   const autoLoadExtPins = addon.settings.get("autoLoadExts");
 
@@ -53,8 +32,10 @@ export default async function({ addon, msg }) {
         const meta = loadedExts.get(id);
 
         if (meta.startsWith("extension_")) {
+          // built-in extension
           extUrls.push(id);
         } else {
+          // external extension
           const index = parseInt(meta.split(".")[1]);
           extUrls.push(manager.workerURLs[index]);
         }
@@ -70,6 +51,7 @@ export default async function({ addon, msg }) {
 
       const testPins = JSON.parse(item);
       if (Array.isArray(testPins.blocks) && Array.isArray(testPins.exts)) {
+        // load required extensions
         const manager = vm.extensionManager;
         for (const ext of testPins.exts) {
           try {
@@ -78,6 +60,7 @@ export default async function({ addon, msg }) {
               manager.loadExtensionURL(ext);
             });
           } catch {
+            // not a URL, must be a built-in
             manager.loadExtensionIdSync(ext);
           }
         }
@@ -102,6 +85,7 @@ export default async function({ addon, msg }) {
   }
 
   const createMenuItem = (text, enabled, callback) => {
+    // so amazing, saves like, 20 lines
     return { text, enabled, callback };
   };
 
@@ -140,18 +124,10 @@ export default async function({ addon, msg }) {
   };
 
   const populateCategory = () => {
-    category.innerHTML = "";
-
-    const flyout = getFlyout();
-    if (!flyout) {
-      console.warn("Pins Addon: Could not get flyout");
-      category.append(createLabel(msg("no_pinned_blocks", "没有置顶的积木!")), gap);
-      return;
-    }
-
-    const flyoutWS = flyout.workspace_;
+    category.innerHTML = ""; // flush out blocks
 
     if (pins.length) {
+      const flyoutWS = Blockly.mainWorkspace.getFlyout().workspace_;
       const blocksXML = [];
       let successes = 0;
       for (const type of pins) {
@@ -164,21 +140,17 @@ export default async function({ addon, msg }) {
         }
       }
 
-      if (blocksXML.length === 0) blocksXML.push(createLabel(msg("no_pinned_blocks", "没有置顶的积木!")));
-      else if (successes !== pins.length) blocksXML.push(createLabel(msg("some_pins_could_not_load", "一些置顶的积木未能加载!")));
+      if (blocksXML.length === 0) blocksXML.push(createLabel(msg("no_pinned_blocks")));
+      else if (successes !== pins.length) blocksXML.push(createLabel(msg("some_pins_could_not_load")));
       category.append(...blocksXML, gap);
     } else {
-      category.append(createLabel(msg("no_pinned_blocks", "没有置顶的积木!")), gap);
+      category.append(createLabel(msg("no_pinned_blocks")), gap);
     }
   }
 
   const updatePinCategory = () => {
     populateCategory();
-    const toolbox = getToolbox();
-    if (!toolbox) {
-      console.warn("Pins Addon: Could not get toolbox");
-      return;
-    }
+    const toolbox = Blockly.mainWorkspace.getToolbox();
     toolbox.populate_(toolbox.workspace_.options.languageTree);
 
     storePins();
@@ -200,18 +172,12 @@ export default async function({ addon, msg }) {
           pins.push(type);
           break;
         case "category": {
-          const toolbox = getToolbox();
-          const flyout = getFlyout();
-          if (!toolbox || !flyout) {
-            console.warn("Pins Addon: Could not get toolbox or flyout for category sorting");
-            break;
-          }
-          const flyoutWS = flyout.workspace_;
+          const toolbox = Blockly.mainWorkspace.getToolbox();
+          const flyoutWS = Blockly.mainWorkspace.getFlyout().workspace_;
           const categories = toolbox.categoryMenu_.categories_.map(c => c.id_);
 
           const getCategoryInd = (id) => {
             const block = getBlockByType(id, flyoutWS);
-            if (!block) return -1;
             let cateID = block.category_;
             if (cateID === "data") cateID = "variables";
             else if (cateID === "data-lists") cateID = "lists";
@@ -238,26 +204,27 @@ export default async function({ addon, msg }) {
 
     let shouldPatchClasses = false;
 
+    // Save the current block in a variable for use in closures.
     var block = this;
     var menuOptions = [];
     if (this.isDeletable() && this.isMovable() && block.isInFlyout) {
       if (pins.includes(specifyType(block))) {
         shouldPatchClasses = true;
         menuOptions.push(
-          createMenuItem(msg("move_to_top", "移到顶部"), true, () => toggleBlockPin(block, true, "top")),
-          createMenuItem(msg("move_to_bottom", "移到底部"), true, () => toggleBlockPin(block, true, "bottom")),
-          createMenuItem(msg("organize_by_category", "按类别排序"), true, () => toggleBlockPin("", true, "category")),
-          createMenuItem(msg("pin", "置顶"), false, () => {}),
-          createMenuItem(msg("unpin", "不再置顶"), true, () => toggleBlockPin(block, false))
+          createMenuItem(msg("move_to_top"), true, () => toggleBlockPin(block, true, "top")),
+          createMenuItem(msg("move_to_bottom"), true, () => toggleBlockPin(block, true, "bottom")),
+          createMenuItem(msg("organize_by_category"), true, () => toggleBlockPin("", true, "category")),
+          createMenuItem(msg("pin"), false, () => {}),
+          createMenuItem(msg("unpin"), true, () => toggleBlockPin(block, false))
         );
       } else {
         menuOptions.push(
-          createMenuItem(msg("pin", "置顶"), true, () => toggleBlockPin(block, true)),
-          createMenuItem(msg("unpin", "不再置顶"), false, () => {})
+          createMenuItem(msg("pin"), true, () => toggleBlockPin(block, true)),
+          createMenuItem(msg("unpin"), false, () => {})
         );
       }
 
-      menuOptions.push(createMenuItem(msg("unpin_all", "全部不再置顶"), pins.length, () => {
+      menuOptions.push(createMenuItem(msg("unpin_all"), pins.length, () => {
         pins = [];
         updatePinCategory();
       }));
@@ -271,7 +238,10 @@ export default async function({ addon, msg }) {
     Blockly.ContextMenu.currentBlock = this;
 
     if (shouldPatchClasses) {
+      // since we have to patch the context meny generator, we cant use
+      // addon apis to fancify the menu. So, recreate it here:
       const menuItems = Blockly.WidgetDiv.DIV.querySelectorAll(`div[class^="goog-menuitem-content"]`);
+      /* Unpin item */
       menuItems[3].parentNode.style.borderTop = "1px solid rgba(0, 0, 0, 0.15)";
     };
   }
@@ -281,8 +251,9 @@ export default async function({ addon, msg }) {
     if (populateInit < 3) {
       populateInit++;
       setTimeout(() => {
+        // 1 second is a good buffer
         populateCategory();
-        const toolbox = getToolbox();
+        const toolbox = Blockly.mainWorkspace.getToolbox();
         if (!toolbox) return;
         toolbox.populate_(toolbox.workspace_.options.languageTree);
       }, 1000);
@@ -302,6 +273,7 @@ export default async function({ addon, msg }) {
     const removedId = typeof extId === "string" ? extId : (detail && detail.id) || "";
     if (!removedId) return;
 
+    // remove blocks in the removed extension from pins
     pins = pins.filter((t) => !t.startsWith(removedId));
 
     populateInit = 2;
