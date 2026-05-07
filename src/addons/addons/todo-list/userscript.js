@@ -472,6 +472,7 @@ export default async function ({ addon, msg, console }) {
             mode: 2,
             id: generateId(),
             name: '新的待办',
+            groupName: '新组',
             color: defaultColor,
             task: {
                 startTime: Date.now(),
@@ -484,6 +485,7 @@ export default async function ({ addon, msg, console }) {
 
         const taskFields = document.createElement('div');
         const groupFields = document.createElement('div');
+        groupFields.style.display = 'none';
         const previewLabel = document.createElement('div');
         const preview = document.createElement('div');
         const preview_steps_create = document.createElement('button');
@@ -668,7 +670,7 @@ export default async function ({ addon, msg, console }) {
         taskFields.appendChild(inputField('text', '名称', { key: 'name' }));
         taskFields.appendChild(groupSelector);
 
-        groupFields.appendChild(inputField('text', '名称', { key: 'name' }));
+        groupFields.appendChild(inputField('text', '名称', { key: 'groupName' }));
         groupFields.appendChild(inputField('color', '颜色', { key: 'color' }));
 
         preview_steps_create.style.cssText = `
@@ -702,7 +704,7 @@ export default async function ({ addon, msg, console }) {
             if (config.mode === 1) {
                 todoData.groups.push({
                     id: config.id,
-                    name: config.name || '新组',
+                    name: config.groupName || '新组',
                     color: config.color
                 });
             } else {
