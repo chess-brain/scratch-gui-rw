@@ -744,6 +744,7 @@
         "UNSUPPORT_TW_2": "我们强烈建议不去使用它们",
         "UNSUPPORT_TW_3": "它们仅用于与 MistWarp / Bilup 兼容",
         "gui.opcodeLabels.costumes": "造型",
+        "gui.opcodeLabels.online": "在线？",
         "CONTROL_SWITCH": "对于 %1",
         "CONTROL_CASE": "情况 %1",
         "CONTROL_CASE_FALLTHROUGH": "情况 %1",
