@@ -292,7 +292,8 @@ module.exports = [
                 chunks: ['editor'],
                 template: 'src/playground/index.ejs',
                 filename: 'editor.html',
-                title: `${APP_NAME} - Refactoring freedom`,
+                title: `${APP_NAME}-Editor`,
+                description: `Create, edit, and share projects with ${APP_NAME}'s powerful Scratch editor. Build games, animations, and interactive stories with advanced features and optimizations.`,
                 isEditor: true,
                 ...htmlWebpackPluginCommon
             }),
