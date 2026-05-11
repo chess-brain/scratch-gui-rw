@@ -131,8 +131,12 @@
     display: block;
 }
 
-:not(:has(> .menu-item.expanded))>.menu-item:hover>.submenu {
+.menu:not(.mobileModeMenu) .menu-item:not(.expanded):hover>.submenu {
     display: block;
+}
+
+.menu.mobileModeMenu .menu-item:not(.expanded):hover>.submenu {
+    display: none !important;
 }
 
 /* Fallback styling for webkit browsers that don't support scrollbar-color */

@@ -3,13 +3,15 @@ import React from 'react';
 
 import MenuComponent from '../components/menu/menu.jsx';
 
-const Menu = ({open, children, ...props}) => (
-    open ? (
+const Menu = ({open, children, ...props}) => {
+    if (!open) return null;
+    
+    return (
         <MenuComponent {...props}>
             {children}
         </MenuComponent>
-    ) : null
-);
+    );
+};
 
 Menu.propTypes = {
     children: PropTypes.node,

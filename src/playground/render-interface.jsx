@@ -280,11 +280,20 @@ class Interface extends React.Component {
     componentDidMount() {
         window.handleClickAddonSettings = this.handleClickAddonSettings;
 
-        // Parse URL parameters for mobile layout
+        const settings = new AESettings();
         const urlParams = new URLSearchParams(window.location.search);
+        
         if (urlParams.has('mobile')) {
-            const settings = new AESettings();
             settings.set('EnableMobileLayout', true);
+        }
+        
+        if (urlParams.has('touch')) {
+            settings.set('EnableMobileTouchDrag', true);
+        }
+        
+        if (urlParams.has('mobile-full')) {
+            settings.set('EnableMobileLayout', true);
+            settings.set('EnableMobileTouchDrag', true);
         }
     }
     componentDidUpdate(prevProps) {
