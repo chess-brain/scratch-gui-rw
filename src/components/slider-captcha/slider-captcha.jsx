@@ -1,124 +1,127 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
 
 import styles from './slider-captcha.css';
 
 class SliderCaptcha extends Component {
     constructor (props) {
         super(props);
+        this.trackRef = React.createRef();
         this.state = {
-            isDragging: false,
-            position: 0,
-            isVerified: false,
-            randomX: 0
+            dragging: false,
+            progress: 0,
+            verified: false,
+            failed: false
         };
-        this.sliderRef = React.createRef();
-        this.thumbRef = React.createRef();
         this.startX = 0;
+        this.startProgress = 0;
     }
 
-    componentDidMount () {
-        this.resetCaptcha();
+    componentWillUnmount () {
+        this.removePointerListeners();
     }
 
-    resetCaptcha () {
-        const randomX = 100 + Math.random() * 150;
-        this.setState({
-            position: 0,
-            isVerified: false,
-            randomX
+    addPointerListeners () {
+        document.addEventListener('mousemove', this.handlePointerMove);
+        document.addEventListener('mouseup', this.handlePointerUp);
+        document.addEventListener('touchmove', this.handlePointerMove, { passive: false });
+        document.addEventListener('touchend', this.handlePointerUp);
+    }
+
+    removePointerListeners () {
+        document.removeEventListener('mousemove', this.handlePointerMove);
+        document.removeEventListener('mouseup', this.handlePointerUp);
+        document.removeEventListener('touchmove', this.handlePointerMove);
+        document.removeEventListener('touchend', this.handlePointerUp);
+    }
+
+    handlePointerStart = (event) => {
+        if (this.state.verified) return;
+        const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+        this.startX = clientX;
+        this.startProgress = this.state.progress;
+        this.setState({ dragging: true, failed: false });
+        this.addPointerListeners();
+        event.preventDefault();
+    };
+
+    handlePointerMove = (event) => {
+        if (!this.state.dragging) return;
+        if (event.cancelable) event.preventDefault();
+        const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+        const track = this.trackRef.current;
+        if (!track) return;
+        const maxDistance = track.clientWidth - 38;
+        const deltaX = clientX - this.startX;
+        const nextProgress = Math.max(0, Math.min(1, this.startProgress + deltaX / maxDistance));
+        this.setState({ progress: nextProgress });
+    };
+
+    handlePointerUp = () => {
+        if (!this.state.dragging) return;
+        this.removePointerListeners();
+        this.setState({ dragging: false }, () => {
+            if (this.state.progress >= 0.98) {
+                this.setState({ verified: true, progress: 1 }, () => {
+                    if (this.props.onVerify) {
+                        this.props.onVerify();
+                    }
+                });
+            } else {
+                if (this.props.onFail) {
+                    this.props.onFail();
+                }
+                this.setState({ failed: true });
+                setTimeout(this.resetCaptcha, 600);
+            }
         });
-    }
-
-    handleMouseDown = (e) => {
-        if (this.state.isVerified) return;
-        this.setState({isDragging: true});
-        this.startX = e.clientX || e.touches[0].clientX;
-        document.addEventListener('mousemove', this.handleMouseMove);
-        document.addEventListener('mouseup', this.handleMouseUp);
-        document.addEventListener('touchmove', this.handleMouseMove);
-        document.addEventListener('touchend', this.handleMouseUp);
     };
 
-    handleMouseMove = (e) => {
-        if (!this.state.isDragging) return;
-        const clientX = e.clientX || e.touches[0].clientX;
-        const diff = clientX - this.startX;
-        const sliderWidth = this.sliderRef.current ? this.sliderRef.current.offsetWidth - 40 : 280;
-        let newPosition = Math.max(0, Math.min(sliderWidth, diff));
-        this.setState({position: newPosition});
-    };
-
-    handleMouseUp = () => {
-        if (!this.state.isDragging) return;
-        this.setState({isDragging: false});
-        document.removeEventListener('mousemove', this.handleMouseMove);
-        document.removeEventListener('mouseup', this.handleMouseUp);
-        document.removeEventListener('touchmove', this.handleMouseMove);
-        document.removeEventListener('touchend', this.handleMouseUp);
-        
-        const tolerance = 5;
-        const targetX = this.state.randomX;
-        const currentX = this.state.position;
-        
-        if (Math.abs(currentX - targetX) <= tolerance) {
-            this.setState({isVerified: true});
-            this.props.onVerify && this.props.onVerify();
-        } else {
-            this.resetCaptcha();
-        }
+    resetCaptcha = () => {
+        this.setState({ dragging: false, progress: 0, verified: false, failed: false });
     };
 
     render () {
-        const {position, isVerified, randomX, isDragging} = this.state;
-        
+        const { dragging, progress, verified } = this.state;
+        const thumbStyle = {
+            left: `${progress * 100}%`,
+            transition: dragging ? 'none' : 'left 0.2s ease'
+        };
+        const progressStyle = {
+            width: `${progress * 100}%`,
+            transition: dragging ? 'none' : 'width 0.2s ease'
+        };
+
         return (
             <div className={styles.captchaContainer}>
-                <div className={styles.captchaTrack} ref={this.sliderRef}>
-                    <div 
-                        className={classNames(styles.captchaTarget, {
-                            [styles.verified]: isVerified
-                        })}
-                        style={{left: `${randomX}px`}}
+                <div className={styles.captchaTrack} ref={this.trackRef}>
+                    <div
+                        className={`${styles.captchaProgress} ${verified ? styles.verified : ''}`}
+                        style={progressStyle}
                     />
-                    <div 
-                        className={classNames(styles.captchaProgress, {
-                            [styles.verified]: isVerified
-                        })}
-                        style={{width: `${position}px`}}
-                    />
-                    <div 
-                        className={classNames(styles.captchaThumb, {
-                            [styles.dragging]: isDragging,
-                            [styles.verified]: isVerified
-                        })}
-                        style={{left: `${position}px`}}
-                        ref={this.thumbRef}
-                        onMouseDown={this.handleMouseDown}
-                        onTouchStart={this.handleMouseDown}
+                    <div
+                        className={`${styles.captchaThumb} ${dragging ? styles.dragging : ''} ${verified ? styles.verified : ''}`}
+                        style={thumbStyle}
+                        onMouseDown={this.handlePointerStart}
+                        onTouchStart={this.handlePointerStart}
                     >
-                        {isVerified ? '✓' : '→'}
+                        ▶
                     </div>
                     <div className={styles.captchaHint}>
-                        {isVerified ? 'Verified!' : 'Slide to verify'}
+                        {verified ? 'Verified' : 'Slide to verify'}
                     </div>
                 </div>
-                {!isVerified && (
-                    <button 
-                        className={styles.resetButton}
-                        onClick={() => this.resetCaptcha()}
-                    >
-                        Reset
-                    </button>
-                )}
+                <button type="button" className={styles.resetButton} onClick={this.resetCaptcha}>
+                    Reset
+                </button>
             </div>
         );
     }
 }
 
 SliderCaptcha.propTypes = {
-    onVerify: PropTypes.func
+    onVerify: PropTypes.func,
+    onFail: PropTypes.func
 };
 
 export default SliderCaptcha;

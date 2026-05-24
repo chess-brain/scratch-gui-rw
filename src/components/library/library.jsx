@@ -192,13 +192,18 @@ class LibraryComponent extends React.Component {
                     key: `favorite-${dataItem[this.props.persistableKey]}`
                 }));
 
+            const nonFavoriteItems = this.props.data
+                .filter(dataItem => (
+                    !this.state.initialFavorites.includes(dataItem[this.props.persistableKey])
+                ));
+
             if (favoriteItems.length) {
                 favoriteItems.push('---');
             }
 
             return [
                 ...favoriteItems,
-                ...this.props.data
+                ...nonFavoriteItems
             ];
         }
 

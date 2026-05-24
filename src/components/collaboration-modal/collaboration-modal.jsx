@@ -30,14 +30,14 @@ class CollaborationModal extends Component {
             error: null,
             pendingRequests: [],
             showJoinRequest: false,
-            joinVerified: false,
-            createVerified: false,
-            joinCaptchaKey: 0,
-            createCaptchaKey: 0
+            activeCaptcha: null,
+            captchaVerified: false,
+            captchaError: null
         };
 
         this.autoJoinAttempted = new Set();
         this.autoJoinInProgress = false;
+        this.autoJoinCaptchaPending = false;
         this._autoJoinTimer = null;
         this._lastAutoJoinAttempt = new Map();
         this._autoJoinFailures = new Map();
@@ -45,6 +45,10 @@ class CollaborationModal extends Component {
         this.handleRoomIdChange = this.handleRoomIdChange.bind(this);
         this.handleJoinRoom = this.handleJoinRoom.bind(this);
         this.handleCreateRoom = this.handleCreateRoom.bind(this);
+        this.openCaptchaModal = this.openCaptchaModal.bind(this);
+        this.closeCaptchaModal = this.closeCaptchaModal.bind(this);
+        this.handleCaptchaSuccess = this.handleCaptchaSuccess.bind(this);
+        this.handleCaptchaFail = this.handleCaptchaFail.bind(this);
         this.handleLeaveRoom = this.handleLeaveRoom.bind(this);
         this.handleKickUser = this.handleKickUser.bind(this);
         this.handleCopyRoomUrl = this.handleCopyRoomUrl.bind(this);
@@ -73,17 +77,14 @@ class CollaborationModal extends Component {
             currentUsername: this.props.currentUsername
         });
 
-        if (this.props.roomId && !this.props.isConnected && !this._autoJoinTimer && !this.autoJoinInProgress) {
-            console.log('[COLLAB MODAL] Auto-joining room from URL:', this.props.roomId);
-
-            const roomIdKey = `${this.props.roomId}-${this.props.currentUsername}`;
-            this.autoJoinAttempted.add(roomIdKey);
-            this.autoJoinInProgress = true;
-            this._autoJoinTimer = setTimeout(() => {
-                this._autoJoinTimer = null;
-                this.autoJoinInProgress = false;
-                this.attemptAutoJoin(this.props.roomId, this.props.currentUsername);
-            }, 100);
+        if (this.props.roomId && !this.props.isConnected && !this.autoJoinCaptchaPending) {
+            console.log('[COLLAB MODAL] URL join detected; opening captcha before auto join:', this.props.roomId);
+            this.autoJoinCaptchaPending = true;
+            this.setState({
+                activeCaptcha: 'auto',
+                captchaVerified: false,
+                captchaError: null
+            });
         }
 
         if (typeof window !== 'undefined' && window.CollaborationService) {
@@ -141,52 +142,15 @@ class CollaborationModal extends Component {
             });
         }
 
-        if (prevProps.roomId !== this.props.roomId && this.props.roomId && !this.props.isConnected) {
-            console.log('Room ID prop changed, updating local state:', this.props.roomId);
+        if (prevProps.roomId !== this.props.roomId && this.props.roomId && !this.props.isConnected && !this.autoJoinCaptchaPending) {
+            console.log('[COLLAB MODAL] Room ID prop changed via URL; opening captcha before auto join:', this.props.roomId);
+            this.autoJoinCaptchaPending = true;
             this.setState({
-                roomId: this.props.roomId
+                roomId: this.props.roomId,
+                activeCaptcha: 'auto',
+                captchaVerified: false,
+                captchaError: null
             });
-
-            const roomIdKey = `${this.props.roomId}-${this.props.currentUsername}`;
-            const now = Date.now();
-            const lastAttempt = this._lastAutoJoinAttempt.get(roomIdKey) || 0;
-            const timeSinceLastAttempt = now - lastAttempt;
-            const cooldownPeriod = 30000;
-            const failureCount = this._autoJoinFailures.get(roomIdKey) || 0;
-            const hasNoPreviousRoomId = prevProps.roomId === null || prevProps.roomId === undefined;
-            const hasCurrentUsername = this.props.currentUsername != null;
-            const shouldAttemptAutoJoin =
-                hasNoPreviousRoomId &&
-                this.props.roomId &&
-                hasCurrentUsername &&
-                !this._autoJoinTimer &&
-                !this.autoJoinInProgress &&
-                timeSinceLastAttempt > cooldownPeriod &&
-                failureCount < 5;
-
-            if (shouldAttemptAutoJoin) {
-                console.log('Auto-joining room after prop update:', this.props.roomId);
-                this.autoJoinAttempted.add(roomIdKey);
-                this._lastAutoJoinAttempt.set(roomIdKey, now);
-                this.autoJoinInProgress = true;
-                this._autoJoinTimer = setTimeout(() => {
-                    this._autoJoinTimer = null;
-                    this.autoJoinInProgress = false;
-                    this.attemptAutoJoin(this.props.roomId, this.props.currentUsername);
-                }, 100);
-            } else if (failureCount >= 5) {
-                console.log(
-                    `[COLLAB MODAL] Too many consecutive failures (${failureCount}), skipping auto-join`
-                );
-                this.setState({
-                    error: 'Unable to connect to the room. Please try again later.',
-                    connectionStep: 'join'
-                });
-            } else if (timeSinceLastAttempt <= cooldownPeriod) {
-                const elapsedSeconds = Math.round(timeSinceLastAttempt / 1000);
-                const cooldownSeconds = cooldownPeriod / 1000;
-                console.log(`[COLLAB MODAL] Auto-join cooldown in effect (${elapsedSeconds}s / ${cooldownSeconds}s)`);
-            }
         }
 
         if (this.props.visible && typeof window !== 'undefined' && window.CollaborationService) {
@@ -259,80 +223,112 @@ class CollaborationModal extends Component {
     }
 
     async handleJoinRoom () {
-        if (!this.state.joinVerified) {
-            this.setState({error: 'Please complete the verification first'});
-            return;
-        }
-        
         if (!this.state.roomId.trim()) {
             this.setState({error: 'Please enter a room ID'});
             return;
         }
 
+        this.openCaptchaModal('join');
+    }
+
+    async handleCreateRoom () {
+        this.openCaptchaModal('create');
+    }
+
+    openCaptchaModal (type) {
+        this.setState({
+            activeCaptcha: type,
+            captchaVerified: false,
+            captchaError: null
+        });
+    }
+
+    closeCaptchaModal () {
+        this.setState({
+            activeCaptcha: null,
+            captchaVerified: false,
+            captchaError: null
+        });
+    }
+
+    handleCaptchaSuccess () {
+        const actionType = this.state.activeCaptcha;
+        if (actionType === 'join') {
+            this.performJoinRoom();
+        } else if (actionType === 'create') {
+            this.performCreateRoom();
+        } else if (actionType === 'auto') {
+            this.performAutoJoin();
+        }
+    }
+
+    handleCaptchaFail () {
+        this.setState({
+            captchaError: 'Verification failed. Please try again.'
+        });
+    }
+
+    async performJoinRoom () {
         const roomId = this.state.roomId.trim();
         const username = this.props.currentUsername;
 
+        this.closeCaptchaModal();
         this.setState({
             isConnecting: true,
             connectionStep: 'connecting',
-            error: null
+            error: null,
+            captchaVerified: false
         });
 
         try {
             await this.props.onJoinRoom(roomId, username);
-            
             const currentUrl = new URL(window.location.href);
             currentUrl.searchParams.set('room', roomId);
             currentUrl.searchParams.delete('username');
             window.history.replaceState(null, null, currentUrl.toString());
-            
             this.setState({ roomId });
         } catch (error) {
             console.error('Failed to join room:', error);
             this.setState({
                 error: `Failed to join room: ${error.message || 'Unknown error'}`,
                 isConnecting: false,
-                connectionStep: 'join',
-                joinVerified: false,
-                joinCaptchaKey: this.state.joinCaptchaKey + 1
+                connectionStep: 'join'
             });
         }
     }
 
-    async handleCreateRoom () {
-        if (!this.state.createVerified) {
-            this.setState({error: 'Please complete the verification first'});
-            return;
-        }
-        
+    async performCreateRoom () {
         const roomCode = this.generateRoomCode();
         const username = this.props.currentUsername;
 
+        this.closeCaptchaModal();
         this.setState({
             isConnecting: true,
             connectionStep: 'connecting',
-            error: null
+            error: null,
+            captchaVerified: false
         });
 
         try {
             await this.props.onCreateRoom(roomCode, username, 'public');
-            
             const currentUrl = new URL(window.location.href);
             currentUrl.searchParams.set('room', roomCode);
             currentUrl.searchParams.delete('username');
             window.history.replaceState(null, null, currentUrl.toString());
-            
             this.setState({ roomId: roomCode });
         } catch (error) {
             console.error('Failed to create room:', error);
             this.setState({
                 error: `Failed to create room: ${error.message || 'Unknown error'}`,
                 isConnecting: false,
-                connectionStep: 'join',
-                createVerified: false,
-                createCaptchaKey: this.state.createCaptchaKey + 1
+                connectionStep: 'join'
             });
         }
+    }
+
+    performAutoJoin () {
+        this.closeCaptchaModal();
+        this.attemptAutoJoin(this.props.roomId, this.props.currentUsername);
     }
 
     handleLeaveRoom () {
@@ -689,14 +685,10 @@ class CollaborationModal extends Component {
                                 onSubmit={this.handleRoomIdChange}
                             />
                         </div>
-                        <SliderCaptcha
-                            key={this.state.joinCaptchaKey}
-                            onVerify={() => this.setState({joinVerified: true})}
-                        />
                         <Button
                             className={styles.primaryButton}
                             onClick={this.handleJoinRoom}
-                            disabled={this.state.isConnecting || !this.state.joinVerified}
+                            disabled={this.state.isConnecting}
                         >
                             <FormattedMessage
                                 defaultMessage="Join Room"
@@ -728,14 +720,10 @@ class CollaborationModal extends Component {
                                 id="gui.collaboration.createDescription"
                             />
                         </div>
-                        <SliderCaptcha
-                            key={this.state.createCaptchaKey}
-                            onVerify={() => this.setState({createVerified: true})}
-                        />
                         <Button
                             className={styles.secondaryButton}
                             onClick={this.handleCreateRoom}
-                            disabled={this.state.isConnecting || !this.state.createVerified}
+                            disabled={this.state.isConnecting}
                         >
                             <FormattedMessage
                                 defaultMessage="Create New Room"
@@ -746,6 +734,80 @@ class CollaborationModal extends Component {
                     </div>
                 </div>
             </Box>
+        );
+    }
+
+    renderCaptchaModal () {
+        if (!this.state.activeCaptcha) return null;
+
+        const actionLabel = this.state.activeCaptcha === 'create'
+            ? this.props.intl.formatMessage({
+                id: 'gui.collaboration.captcha.createLabel',
+                defaultMessage: 'Create room verification',
+                description: 'Captcha modal title for create room'
+            })
+            : this.state.activeCaptcha === 'auto'
+                ? this.props.intl.formatMessage({
+                    id: 'gui.collaboration.captcha.autoLabel',
+                    defaultMessage: 'Room verification',
+                    description: 'Captcha modal title for URL room entry'
+                })
+                : this.props.intl.formatMessage({
+                    id: 'gui.collaboration.captcha.joinLabel',
+                    defaultMessage: 'Join room verification',
+                    description: 'Captcha modal title for join room'
+                });
+
+        return (
+            <Modal
+                className={styles.captchaModal}
+                contentLabel={actionLabel}
+                onRequestClose={this.closeCaptchaModal}
+                visible={Boolean(this.state.activeCaptcha)}
+            >
+                <Box className={styles.captchaModalContent}>
+                    <div className={styles.captchaModalHeader}>
+                        <h2>{actionLabel}</h2>
+                        <div className={styles.captchaModalInstructions}>
+                            {this.state.activeCaptcha === 'auto' ? (
+                                <FormattedMessage
+                                    defaultMessage="A room was opened from the URL. Please complete the slider verification before joining."
+                                    description="Instruction for URL room captcha modal"
+                                    id="gui.collaboration.captcha.autoInstruction"
+                                />
+                            ) : (
+                                <FormattedMessage
+                                    defaultMessage="Please complete the slider verification to continue."
+                                    description="Instruction for manual captcha modal"
+                                    id="gui.collaboration.captcha.manualInstruction"
+                                />
+                            )}
+                        </div>
+                    </div>
+                    <SliderCaptcha
+                        key={this.state.activeCaptcha}
+                        onVerify={this.handleCaptchaSuccess}
+                        onFail={this.handleCaptchaFail}
+                    />
+                    {this.state.captchaError && (
+                        <div className={styles.captchaError}>
+                            {this.state.captchaError}
+                        </div>
+                    )}
+                    <div className={styles.captchaButtonRow}>
+                        <Button
+                            className={styles.secondaryButton}
+                            onClick={this.closeCaptchaModal}
+                        >
+                            <FormattedMessage
+                                defaultMessage="Cancel"
+                                description="Button to cancel the captcha modal"
+                                id="gui.collaboration.captcha.cancel"
+                            />
+                        </Button>
+                    </div>
+                </Box>
+            </Modal>
         );
     }
 
@@ -1187,6 +1249,7 @@ class CollaborationModal extends Component {
             >
                 <Box className={styles.body}>
                     {content}
+                    {this.renderCaptchaModal()}
                 </Box>
             </Modal>
         );

@@ -9,7 +9,8 @@ export class AESettings {
                         EnableExtensionPreview: false,
                         EnableVSCodeLayout: false,
                         EnableMobileLayout: false,
-                        EnableMobileTouchDrag: false
+                        EnableMobileTouchDrag: false,
+                        enableHatBlockCommentHint: true
                 };
                 this.init();
         }

@@ -77,6 +77,17 @@ const messages = defineMessages({
     }
 });
 
+const getProcedureReturnMessage = (intl) => {
+    const message = intl.formatMessage(messages.PROCEDURES_RETURN, {
+        v: '%1'
+    });
+    if (typeof message !== 'string' || !/%1/.test(message)) {
+        log.warn('PROCEDURES_RETURN translation is missing %1 placeholder; falling back to default.');
+        return 'return %1';
+    }
+    return message;
+};
+
 const addFunctionListener = (object, property, callback) => {
     const oldFn = object[property];
     object[property] = function (...args) {
@@ -179,9 +190,7 @@ class Blocks extends React.Component {
         this.ScratchBlocks.ScratchMsgs.setLocale(this.props.locale);
 
         const Msg = this.ScratchBlocks.Msg;
-        Msg.PROCEDURES_RETURN = this.props.intl.formatMessage(messages.PROCEDURES_RETURN, {
-            v: '%1'
-        });
+        Msg.PROCEDURES_RETURN = getProcedureReturnMessage(this.props.intl);
         Msg.PROCEDURES_TO_REPORTER = this.props.intl.formatMessage(messages.PROCEDURES_TO_REPORTER);
         Msg.PROCEDURES_TO_STATEMENT = this.props.intl.formatMessage(messages.PROCEDURES_TO_STATEMENT);
         Msg.PROCEDURES_DOCS = this.props.intl.formatMessage(messages.PROCEDURES_DOCS);
@@ -701,6 +710,7 @@ class Blocks extends React.Component {
     }
     setLocale () {
         this.ScratchBlocks.ScratchMsgs.setLocale(this.props.locale);
+        this.ScratchBlocks.Msg.PROCEDURES_RETURN = getProcedureReturnMessage(this.props.intl);
         this.props.vm.setLocale(this.props.locale, this.props.messages)
             .then(() => {
                 if (this.unmounted) return;
@@ -1614,6 +1624,10 @@ const mapDispatchToProps = dispatch => ({
         dispatch(updateMetrics(metrics));
     }
 });
+
+export {
+    getProcedureReturnMessage
+};
 
 export default injectIntl(errorBoundaryHOC('Blocks')(
     connect(

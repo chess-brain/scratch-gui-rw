@@ -1,0 +1,100 @@
+﻿      }
+      isMouseDown = true;
+    };
+    const width = this.width;
+    const handleDragMove = (e) => {
+      if (!isMouseDown) {
+        return false;
+      }
+      e.preventDefault();
+      let eventX;
+      let eventY;
+      if (e instanceof MouseEvent) {
+        eventX = e.clientX;
+        eventY = e.clientY;
+      } else if (e instanceof TouchEvent) {
+        eventX = e.touches[0].clientX;
+        eventY = e.touches[0].clientY;
+      } else {
+        eventX = 0;
+        eventY = 0;
+      }
+      const moveX = eventX - originX;
+      const moveY = eventY - originY;
+      if (moveX < 0 || moveX + 38 >= width) {
+        return false;
+      }
+      this.slider.style.left = `${moveX}px`;
+      const blockLeft = (width - 40 - 20) / (width - 40) * moveX;
+      this.block.style.left = `${blockLeft}px`;
+      addClass(this.sliderContainer, "sliderContainer_active");
+      this.sliderMask.style.width = `${moveX}px`;
+      trail.push(moveY);
+    };
+    const handleDragEnd = (e) => {
+      if (!isMouseDown) {
+        return false;
+      }
+      isMouseDown = false;
+      const eventX = e instanceof MouseEvent && e.clientX || e instanceof TouchEvent && e.changedTouches[0].clientX;
+      if (eventX === originX) {
+        return false;
+      }
+      removeClass(this.sliderContainer, "sliderContainer_active");
+      this.trail = trail;
+      const { spliced, verified } = this.verify();
+      if (spliced) {
+        if (verified) {
+          addClass(this.sliderContainer, "sliderContainer_success");
+          typeof this.onSuccess === "function" && this.onSuccess();
+        } else {
+          addClass(this.sliderContainer, "sliderContainer_fail");
+          this.text.innerHTML = "\u8BF7\u518D\u8BD5\u4E00\u6B21";
+          this.reset();
+        }
+      } else {
+        addClass(this.sliderContainer, "sliderContainer_fail");
+        typeof this.onFail === "function" && this.onFail();
+        setTimeout(() => {
+          this.reset.bind(this);
+        }, 1e3);
+      }
+    };
+    this.slider.addEventListener("mousedown", handleDragStart);
+    this.slider.addEventListener("touchstart", handleDragStart);
+    this.block.addEventListener("mousedown", handleDragStart);
+    this.block.addEventListener("touchstart", handleDragStart);
+    document.addEventListener("mousemove", handleDragMove);
+    document.addEventListener("touchmove", handleDragMove);
+    document.addEventListener("mouseup", handleDragEnd);
+    document.addEventListener("touchend", handleDragEnd);
+  }
+  verify() {
+    const arr = this.trail;
+    const average = arr.reduce(sum) / arr.length;
+    const deviations = arr.map((x) => x - average);
+    const stddev = Math.sqrt(deviations.map(square).reduce(sum) / arr.length);
+    const left = parseInt(this.block.style.left);
+    return {
+      spliced: Math.abs(left - this.x) < 10,
+      verified: stddev !== 0
+    };
+  }
+  reset() {
+    const { width, height } = this;
+    setClass(this.sliderContainer, "sliderContainer");
+    this.slider.style.left = `${0}px`;
+    this.block.width = width;
+    this.block.style.left = `${0}px`;
+    this.sliderMask.style.width = `${0}px`;
+    this.canvasCtx.clearRect(0, 0, width, height);
+    this.blockCtx.clearRect(0, 0, width, height);
+    this.setLoading(true);
+    this.img.src = this.getRandomImgSrc(this.imgSrc);
+  }
+}
+function captcha(opts) {
+  return new Captcha(opts);
+}
+
+export { captcha };

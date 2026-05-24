@@ -485,7 +485,56 @@ const fetchLibrary = async () => {
         console.warn('Failed to load Bilup extensions:', error);
     }
 
-    return [...twExtensions, ...mistiumExtensions, ...sharkpoolsExtensions, ...penguinmodExtensions, ...remixwarpExtensions, ...astraExtensions, ...engineExtensions, ...yesshapeExtensions, ...bilupExtensions];
+    return dedupeFetchedExtensions([
+        ...twExtensions,
+        ...mistiumExtensions,
+        ...sharkpoolsExtensions,
+        ...penguinmodExtensions,
+        ...remixwarpExtensions,
+        ...astraExtensions,
+        ...engineExtensions,
+        ...yesshapeExtensions,
+        ...bilupExtensions
+    ]);
+};
+
+const mergeExtensionTags = (existingTags, newTags) => Array.from(
+    new Set([
+        ...(existingTags || []).map(tag => String(tag).toLowerCase()),
+        ...(newTags || []).map(tag => String(tag).toLowerCase())
+    ])
+);
+
+const dedupeFetchedExtensions = extensions => {
+    const seen = new Map();
+    for (const extension of extensions) {
+        const extensionId = extension.extensionId || extension.id;
+        if (!extensionId) {
+            continue;
+        }
+
+        if (!seen.has(extensionId)) {
+            seen.set(extensionId, {
+                ...extension,
+                extensionId,
+                tags: mergeExtensionTags(extension.tags, extension.tags)
+            });
+        } else {
+            const previous = seen.get(extensionId);
+            seen.set(extensionId, {
+                ...previous,
+                ...extension,
+                extensionId,
+                tags: mergeExtensionTags(previous.tags, extension.tags)
+            });
+        }
+    }
+    return Array.from(seen.values());
+};
+
+export {
+    mergeExtensionTags,
+    dedupeFetchedExtensions
 };
 
 class ExtensionLibrary extends React.PureComponent {

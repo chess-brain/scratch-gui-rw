@@ -3,6 +3,28 @@ import AddonHooks from '../../addons/hooks';
 
 import WindowManager from '../../addons/window-system/window-manager';
 import * as BrowserGit from '../git/browser-git';
+import twExtensionTranslations from '../libraries/extensions/tw-extension-translations';
+
+/**
+ * Collect all block-level translations from tw-extension-translations.
+ * Returns a map of locale → { translationId: translatedText }
+ * @returns {object}
+ */
+const collectBlockTranslations = () => {
+    const result = {};
+    for (const extId of Object.keys(twExtensionTranslations)) {
+        const ext = twExtensionTranslations[extId];
+        if (!ext.blockTranslations) continue;
+        for (const locale of Object.keys(ext.blockTranslations)) {
+            if (!result[locale]) result[locale] = {};
+            Object.assign(result[locale], ext.blockTranslations[locale]);
+        }
+    }
+    return result;
+};
+
+// Pre-compute the merged block translations
+const allBlockTranslations = collectBlockTranslations();
 
 /**
  * Implements Scratch.gui API for unsandboxed extensions.
@@ -45,6 +67,24 @@ const implementGuiAPI = Scratch => {
         // Expose MistWarp's browser git integration on the VM.
         git: BrowserGit
     };
+
+    // Inject block-level translations for TurboWarp extensions.
+    // The extensions use Scratch.translate() which creates IDs like '_fill sprite with camera'.
+    // We wrap translate.setup to merge our translations with whatever the extension provides.
+    if (Scratch.translate && Scratch.translate.setup) {
+        const originalSetup = Scratch.translate.setup;
+        Scratch.translate.setup = (newTranslations) => {
+            const locale = (Scratch.translate.language || '').toLowerCase();
+            const ourTranslations = allBlockTranslations[locale] || {};
+
+            let merged = newTranslations;
+            if (Object.keys(ourTranslations).length > 0) {
+                merged = Object.assign({}, ourTranslations, newTranslations || {});
+            }
+
+            originalSetup.call(Scratch.translate, merged !== newTranslations ? merged : newTranslations);
+        };
+    }
 };
 
 export default implementGuiAPI;
