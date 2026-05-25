@@ -160,6 +160,17 @@ class Blocks extends React.Component {
         this.attachPaletteHoverListeners = this.attachPaletteHoverListeners.bind(this);
         this.detachPaletteHoverListeners = this.detachPaletteHoverListeners.bind(this);
 
+        // Hat block comment reminder feature
+        this.hatBlockCommentReminderEnabled = localStorage.getItem('mw:hat-block-comment-reminder') !== 'false';
+        this.hatReminderCheckInterval = parseInt(localStorage.getItem('mw:hat-reminder-check-interval'), 10) || 500;
+        this.hatReminderBlockThreshold = parseInt(localStorage.getItem('mw:hat-reminder-block-threshold'), 10) || 10;
+        this.hatReminderCommentText = localStorage.getItem('mw:hat-reminder-comment-text') || '记得写注释，不然别人和自己以后都看不懂！';
+        this._hatReminderChecking = false;
+        this._checkHatBlockReminders = debounce(this._checkHatBlockRemindersImpl.bind(this), this.hatReminderCheckInterval);
+        this._handleHatReminderSettingChanged = this._handleHatReminderSettingChanged.bind(this);
+        this._onWorkspaceChangeForReminder = this._onWorkspaceChangeForReminder.bind(this);
+        this._handleHatReminderClosed = this._handleHatReminderClosed.bind(this);
+
         this.state = {
             prompt: null,
             flyoutWidth: null,
@@ -179,6 +190,66 @@ class Blocks extends React.Component {
         SettingsStore.addEventListener('setting-changed', this.handleAddonSettingChanged);
 
         this.ScratchBlocks = VMScratchBlocks(this.props.vm, this.props.useCatBlocks);
+
+        // Monkey-patch ScratchBlockComment for hat reminder features
+        const ScratchBlockComment = this.ScratchBlocks.ScratchBlockComment;
+        const ScratchBubble = this.ScratchBlocks.ScratchBubble;
+        if (ScratchBlockComment && !ScratchBlockComment.prototype._hatReminderPatched) {
+            ScratchBlockComment.prototype._hatReminderPatched = true;
+
+            const originalCreateEditor = ScratchBlockComment.prototype.createEditor_;
+            ScratchBlockComment.prototype.createEditor_ = function () {
+                const result = originalCreateEditor.call(this);
+                const body = this.foreignObject_ && this.foreignObject_.querySelector('body');
+                if (body && !body.querySelector('button.sc-clear-btn')) {
+                    const HTML_NS = 'http://www.w3.org/1999/xhtml';
+                    const buttonDiv = document.createElementNS(HTML_NS, 'div');
+                    buttonDiv.className = 'hat-reminder-clear-btn-wrapper';
+                    buttonDiv.style.cssText = 'margin: 4px 12px 8px; text-align: right;';
+                    const clearBtn = document.createElementNS(HTML_NS, 'button');
+                    clearBtn.className = 'sc-clear-btn';
+                    clearBtn.textContent = '清空';
+                    clearBtn.style.cssText = 'padding: 2px 10px; font-size: 12px; cursor: pointer; border: none; background: #ff8c1a; color: white; border-radius: 4px;';
+                    clearBtn.addEventListener('click', e => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        this.setText('');
+                        if (this.textarea_) this.textarea_.value = '';
+                    });
+                    buttonDiv.appendChild(clearBtn);
+                    body.appendChild(buttonDiv);
+                    this.clearButtonDiv_ = buttonDiv;
+                }
+                return result;
+            };
+
+            const originalResizeBubble = ScratchBlockComment.prototype.resizeBubble_;
+            ScratchBlockComment.prototype.resizeBubble_ = function () {
+                originalResizeBubble.call(this);
+                if (this.clearButtonDiv_ && this.bubble_) {
+                    const size = this.bubble_.getBubbleSize();
+                    const doubleBorderWidth = 2 * ScratchBubble.BORDER_WIDTH;
+                    const textOffset = ScratchBlockComment.TEXTAREA_OFFSET * 2;
+                    const buttonHeight = 30;
+                    this.textarea_.style.height = (size.height - doubleBorderWidth -
+                        ScratchBubble.TOP_BAR_HEIGHT - textOffset - buttonHeight) + 'px';
+                }
+            };
+
+            const originalDispose = ScratchBlockComment.prototype.dispose;
+            ScratchBlockComment.prototype.dispose = function () {
+                if (this.isHatReminder_ && this.block_) {
+                    window.dispatchEvent(new CustomEvent('hatreminder:closed', {
+                        detail: {blockId: this.block_.id}
+                    }));
+                }
+                originalDispose.call(this);
+            };
+        }
+
+        // Listen for hat reminder close events
+        window.addEventListener('hatreminder:closed', this._handleHatReminderClosed);
+
         this.ScratchBlocks.prompt = this.handlePromptStart;
         this.ScratchBlocks.statusButtonCallback = this.handleConnectionModalStart;
         this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
@@ -293,6 +364,17 @@ class Blocks extends React.Component {
         // tw: Handle when extensions are added when Blocks isn't mounted
         for (const category of this.props.vm.runtime._blockInfo) {
             this.handleExtensionAdded(category);
+        }
+
+        // Hat block comment reminder: listen for setting changes
+        window.addEventListener('mw-settings-changed', this._handleHatReminderSettingChanged);
+
+        // Hat block comment reminder: listen for workspace changes
+        this.workspace.addChangeListener(this._onWorkspaceChangeForReminder);
+
+        // Run initial check
+        if (this.hatBlockCommentReminderEnabled) {
+            this._checkHatBlockReminders();
         }
 
         gentlyRequestPersistentStorage();
@@ -415,6 +497,17 @@ class Blocks extends React.Component {
         this.detachPaletteHoverListeners();
         this.detachVM();
         this.unmounted = true;
+
+        // Remove hat block reminder listeners
+        window.removeEventListener('mw-settings-changed', this._handleHatReminderSettingChanged);
+        window.removeEventListener('hatreminder:closed', this._handleHatReminderClosed);
+        if (this.workspace && this._onWorkspaceChangeForReminder) {
+            this.workspace.removeChangeListener(this._onWorkspaceChangeForReminder);
+        }
+        if (this._checkHatBlockReminders && this._checkHatBlockReminders.cancel) {
+            this._checkHatBlockReminders.cancel();
+        }
+
         this.workspace.dispose();
         clearTimeout(this.toolboxUpdateTimeout);
 
@@ -1439,6 +1532,168 @@ class Blocks extends React.Component {
             }
         }, 100);
     }
+    // === Hat Block Comment Reminder Feature ===
+    HAT_REMINDER_MAGIC () {
+        return ' // _hatblock_reminder_';
+    }
+    HAT_REMINDER_COMMENT_ID (blockId) {
+        return `_hat_reminder_${blockId}`;
+    }
+    _handleHatReminderSettingChanged (event) {
+        if (!event.detail) return;
+        const {key, value} = event.detail;
+        if (key === 'hat-block-comment-reminder') {
+            const wasEnabled = this.hatBlockCommentReminderEnabled;
+            this.hatBlockCommentReminderEnabled = value;
+            if (!wasEnabled && this.hatBlockCommentReminderEnabled) {
+                this._checkHatBlockReminders();
+            } else if (wasEnabled && !this.hatBlockCommentReminderEnabled) {
+                this._removeAllReminderComments();
+            }
+        } else if (key === 'hat-reminder-check-interval') {
+            this.hatReminderCheckInterval = value;
+            // Re-create debounced check with new interval
+            this._checkHatBlockReminders = debounce(
+                this._checkHatBlockRemindersImpl.bind(this), value
+            );
+        } else if (key === 'hat-reminder-block-threshold') {
+            this.hatReminderBlockThreshold = value;
+            // Re-check with new threshold
+            if (this.hatBlockCommentReminderEnabled) {
+                this._checkHatBlockReminders();
+            }
+        } else if (key === 'hat-reminder-comment-text') {
+            this.hatReminderCommentText = value;
+        } else if (key === 'hat-reminder-reset') {
+            this.hatReminderCheckInterval = value.hatReminderCheckInterval;
+            this.hatReminderBlockThreshold = value.hatReminderBlockThreshold;
+            this.hatReminderCommentText = value.hatReminderCommentText;
+            this._checkHatBlockReminders = debounce(
+                this._checkHatBlockRemindersImpl.bind(this), this.hatReminderCheckInterval
+            );
+            if (this.hatBlockCommentReminderEnabled) {
+                this._checkHatBlockReminders();
+            }
+        }
+    }
+    _onWorkspaceChangeForReminder () {
+        if (!this.hatBlockCommentReminderEnabled) return;
+        this._checkHatBlockReminders();
+    }
+    _checkHatBlockRemindersImpl () {
+        if (!this.hatBlockCommentReminderEnabled) return;
+        if (!this.workspace) return;
+        if (this._hatReminderChecking) return;
+
+        this._hatReminderChecking = true;
+        try {
+            const target = this.props.vm && this.props.vm.editingTarget;
+            if (!target) {
+                this._hatReminderChecking = false;
+                return;
+            }
+
+            const topBlocks = this.workspace.getTopBlocks(false) || [];
+            const closedReminders = target.closedHatReminders || new Set();
+
+            for (const block of topBlocks) {
+                if (!block.startHat_) continue;
+                const opcode = block.type;
+                if (!/^event_when/.test(opcode) && opcode !== 'control_start_as_clone') continue;
+
+                const count = this._countBlocksInChain(block);
+                const commentId = this.HAT_REMINDER_COMMENT_ID(block.id);
+                const hasReminder = block.comment && block.comment.id === commentId;
+                const hasUserComment = block.comment && block.comment.id !== commentId;
+                const threshold = this.hatReminderBlockThreshold;
+
+                if (count > threshold && !hasReminder && !hasUserComment && !closedReminders.has(block.id)) {
+                    this._createReminderCommentForBlock(block, commentId);
+                } else if ((count <= threshold || hasUserComment) && hasReminder) {
+                    this._deleteReminderComment(commentId);
+                }
+            }
+        } finally {
+            this._hatReminderChecking = false;
+        }
+    }
+    _countBlocksInChain (startBlock) {
+        let count = 0;
+        let block = startBlock;
+        while (block) {
+            count++;
+            block = block.getNextBlock();
+        }
+        return count;
+    }
+    _createReminderCommentForBlock (block, commentId) {
+        try {
+            const text = this.hatReminderCommentText;
+            const blockXY = block.getRelativeToSurfaceXY();
+            const x = blockXY.x + 70;
+            const y = blockXY.y + 10;
+
+            block.setCommentText(text, commentId, x, y, false);
+            if (block.comment) {
+                block.comment.isHatReminder_ = true;
+                block.comment.setSize(350, 180);
+            }
+        } catch (e) {
+            // Silently ignore errors from comment creation
+        }
+    }
+    _deleteReminderComment (commentId) {
+        try {
+            const blockId = commentId.replace(/^_hat_reminder_/, '');
+            const block = this.workspace.getBlockById(blockId);
+            if (block && block.comment && block.comment.id === commentId) {
+                block.comment.isHatReminder_ = false;
+                block.setCommentText(null);
+            }
+        } catch (e) {
+            // Silently ignore errors from comment deletion
+        }
+    }
+    _removeAllReminderComments () {
+        if (!this.workspace) return;
+
+        // Remove new-style block-attached reminder comments
+        const topBlocks = this.workspace.getTopBlocks(false) || [];
+        for (const block of topBlocks) {
+            if (block.comment && block.comment.id && block.comment.id.startsWith('_hat_reminder_')) {
+                block.comment.isHatReminder_ = false;
+                block.setCommentText(null);
+            }
+        }
+
+        // Also clean up old-style workspace/VM comments for backwards compatibility
+        const target = this.props.vm && this.props.vm.editingTarget;
+        if (target && target.comments) {
+            for (const [commentId, comment] of Object.entries(target.comments)) {
+                if (comment.text && comment.text.includes(this.HAT_REMINDER_MAGIC())) {
+                    delete target.comments[commentId];
+                }
+            }
+        }
+        const topComments = this.workspace.getTopComments(false) || [];
+        for (const comment of topComments) {
+            if (comment.text_ && comment.text_.includes(this.HAT_REMINDER_MAGIC())) {
+                try {
+                    comment.dispose();
+                } catch (e) {
+                    // ignore
+                }
+            }
+        }
+    }
+    _handleHatReminderClosed (event) {
+        const target = this.props.vm && this.props.vm.editingTarget;
+        if (!target || !event.detail || !event.detail.blockId) return;
+        target.closedHatReminders = target.closedHatReminders || new Set();
+        target.closedHatReminders.add(event.detail.blockId);
+    }
+    // === End Hat Block Comment Reminder Feature ===
+
     render () {
         /* eslint-disable no-unused-vars */
         const {

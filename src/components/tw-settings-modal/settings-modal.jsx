@@ -14,7 +14,7 @@ import helpIcon from './help-icon.svg';
 import {APP_NAME} from '../../lib/constants/brand.js';
 import {AESettings} from '../../lib/settings.js';
 
-import {Settings, Zap, Code} from 'lucide-react';
+import {Settings, Zap, Code, RotateCcw} from 'lucide-react';
 
 const BufferedInput = BufferedInputHOC(Input);
 
@@ -47,6 +47,31 @@ const messages = defineMessages({
     headerExperimental: {
         defaultMessage: '实验性',
         id: 'mw.settings.experimental'
+    },
+    hatBlockCommentReminder: {
+        defaultMessage: '帽子积木注释提醒',
+        description: 'Hat block comment reminder label',
+        id: 'tw.settingsModal.hatBlockCommentReminder'
+    },
+    hatBlockCommentReminderHelp: {
+        defaultMessage: '当帽子积木下方连接的积木超过设定数量时，自动在旁边添加注释提醒您写注释。',
+        description: 'Hat block comment reminder help',
+        id: 'tw.settingsModal.hatBlockCommentReminderHelp'
+    },
+    hatReminderCheckInterval: {
+        defaultMessage: '检测间隔（毫秒）',
+        description: 'Hat reminder check interval label',
+        id: 'tw.settingsModal.hatReminderCheckInterval'
+    },
+    hatReminderBlockThreshold: {
+        defaultMessage: '积木数量阈值',
+        description: 'Hat reminder block count threshold label',
+        id: 'tw.settingsModal.hatReminderBlockThreshold'
+    },
+    hatReminderCommentText: {
+        defaultMessage: '注释内容',
+        description: 'Hat reminder comment text label',
+        id: 'tw.settingsModal.hatReminderCommentText'
     },
     headerAE: {
         defaultMessage: 'AE 设置',
@@ -524,6 +549,19 @@ const settingDefinitions = {
             description: 'Multi Workspaces help',
             id: 'tw.settingsModal.multiWorkspacesHelp'
         }
+    },
+    hatBlockCommentReminder: {
+        label: {
+            defaultMessage: '帽子积木注释提醒',
+            description: 'Hat block comment reminder setting',
+            id: 'tw.settingsModal.hatBlockCommentReminder'
+        },
+        help: {
+            // eslint-disable-next-line max-len
+            defaultMessage: '当帽子积木（事件分类）下方连接的积木超过设定数量时，会自动在旁边添加注释提醒。',
+            description: 'Hat block comment reminder setting help',
+            id: 'tw.settingsModal.hatBlockCommentReminderHelp'
+        }
     }
 };
 
@@ -557,6 +595,89 @@ const CaseSensitiveLists = createBooleanSetting('CaseSensitiveLists', settingDef
 const RealLayerIndexes = createBooleanSetting('RealLayerIndexes', settingDefinitions.realLayerIndexes);
 const SuperRefactor = createBooleanSetting('SuperRefactor', settingDefinitions.superRefactor);
 const MultiWorkspaces = createBooleanSetting('MultiWorkspaces', settingDefinitions.multiWorkspaces);
+const HatBlockCommentReminder = props => (
+    <Setting
+        active={props.value}
+        primary={
+            <label className={styles.label}>
+                <FancyCheckbox
+                    className={styles.checkbox}
+                    checked={props.value}
+                    onChange={props.onChange}
+                />
+                <FormattedMessage {...settingDefinitions.hatBlockCommentReminder.label} />
+                <span
+                    role="button"
+                    tabIndex={0}
+                    title="重置为默认值"
+                    onClick={props.onReset}
+                    onKeyDown={e => { if (e.key === 'Enter') props.onReset(); }}
+                    style={{
+                        cursor: 'pointer',
+                        marginLeft: '8px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        opacity: 0.6,
+                        transition: 'opacity 0.2s'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; }}
+                >
+                    <RotateCcw size={16} />
+                </span>
+            </label>
+        }
+        help={<FormattedMessage {...settingDefinitions.hatBlockCommentReminder.help} />}
+        secondary={props.value ? (
+            <div style={{marginTop: '8px', padding: '0 8px'}}>
+                <div className={styles.label} style={{marginBottom: '4px'}}>
+                    <FormattedMessage {...messages.hatReminderCheckInterval} />
+                    <BufferedInput
+                        value={props.checkInterval}
+                        onSubmit={props.onCheckIntervalChange}
+                        className={styles.customStageSizeInput}
+                        type="number"
+                        min="100"
+                        max="10000"
+                        step="100"
+                    />
+                </div>
+                <div className={styles.label} style={{marginBottom: '4px'}}>
+                    <FormattedMessage {...messages.hatReminderBlockThreshold} />
+                    <BufferedInput
+                        value={props.blockThreshold}
+                        onSubmit={props.onBlockThresholdChange}
+                        className={styles.customStageSizeInput}
+                        type="number"
+                        min="1"
+                        max="1000"
+                        step="1"
+                    />
+                </div>
+                <div className={styles.label} style={{marginBottom: '4px'}}>
+                    <FormattedMessage {...messages.hatReminderCommentText} />
+                    <BufferedInput
+                        value={props.commentText}
+                        onSubmit={props.onCommentTextChange}
+                        className={styles.customStageSizeInput}
+                        style={{flex: 1}}
+                    />
+                </div>
+            </div>
+        ) : null}
+    />
+);
+HatBlockCommentReminder.propTypes = {
+    value: PropTypes.bool,
+    onChange: PropTypes.func.isRequired,
+    checkInterval: PropTypes.number,
+    onCheckIntervalChange: PropTypes.func.isRequired,
+    blockThreshold: PropTypes.number,
+    onBlockThresholdChange: PropTypes.func.isRequired,
+    commentText: PropTypes.string,
+    onCommentTextChange: PropTypes.func.isRequired,
+    onReset: PropTypes.func.isRequired
+};
 
 const DisableCompiler = props => (
     <BooleanSetting
@@ -889,6 +1010,20 @@ const pageConfigurations = {
                         })
                     },
                     {
+                        component: HatBlockCommentReminder,
+                        props: props => ({
+                            value: props.hatBlockCommentReminder,
+                            onChange: props.onHatBlockCommentReminderChange,
+                            checkInterval: props.hatReminderCheckInterval,
+                            onCheckIntervalChange: props.onHatReminderCheckIntervalChange,
+                            blockThreshold: props.hatReminderBlockThreshold,
+                            onBlockThresholdChange: props.onHatReminderBlockThresholdChange,
+                            commentText: props.hatReminderCommentText,
+                            onCommentTextChange: props.onHatReminderCommentTextChange,
+                            onReset: props.onHatReminderReset
+                        })
+                    },
+                    {
                         component: EnableMobileTouchDrag,
                         props: props => ({
                             value: AEsettings.get('EnableMobileTouchDrag') || false,
@@ -1163,7 +1298,16 @@ SettingsModalComponent.propTypes = {
     showFPSCounter: PropTypes.bool,
     onShowFPSCounterChange: PropTypes.func,
     multiWorkspaces: PropTypes.bool,
-    onMultiWorkspacesChange: PropTypes.func
+    onMultiWorkspacesChange: PropTypes.func,
+    hatBlockCommentReminder: PropTypes.bool,
+    onHatBlockCommentReminderChange: PropTypes.func,
+    hatReminderCheckInterval: PropTypes.number,
+    onHatReminderCheckIntervalChange: PropTypes.func,
+    hatReminderBlockThreshold: PropTypes.number,
+    onHatReminderBlockThresholdChange: PropTypes.func,
+    hatReminderCommentText: PropTypes.string,
+    onHatReminderCommentTextChange: PropTypes.func,
+    onHatReminderReset: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);

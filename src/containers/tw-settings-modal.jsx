@@ -33,7 +33,11 @@ class UsernameModal extends React.Component {
             viewCompiledMode: localStorage.getItem('mw:view-compiled-mode') === 'true',
             storeThemeInProject: localStorage.getItem('mw:store-theme-in-project') === 'true',
             superRefactor: localStorage.getItem('mw:super-refactor') === 'true',
-            multiWorkspaces: localStorage.getItem('mw:multi-workspaces') === 'true'
+            multiWorkspaces: localStorage.getItem('mw:multi-workspaces') === 'true',
+            hatBlockCommentReminder: localStorage.getItem('mw:hat-block-comment-reminder') !== 'false',
+            hatReminderCheckInterval: parseInt(localStorage.getItem('mw:hat-reminder-check-interval'), 10) || 500,
+            hatReminderBlockThreshold: parseInt(localStorage.getItem('mw:hat-reminder-block-threshold'), 10) || 10,
+            hatReminderCommentText: localStorage.getItem('mw:hat-reminder-comment-text') || '记得写注释，不然别人和自己以后都看不懂！'
         };
 
         bindAll(this, [
@@ -58,7 +62,12 @@ class UsernameModal extends React.Component {
             'handleViewCompiledModeChange',
             'handleStoreThemeInProjectChange',
             'handleSuperRefactorChange',
-            'handleMultiWorkspacesChange'
+            'handleMultiWorkspacesChange',
+            'handleHatBlockCommentReminderChange',
+            'handleHatReminderCheckIntervalChange',
+            'handleHatReminderBlockThresholdChange',
+            'handleHatReminderCommentTextChange',
+            'handleHatReminderReset'
         ]);
     }
 
@@ -231,6 +240,71 @@ class UsernameModal extends React.Component {
             // ignore
         }
     }
+    handleHatBlockCommentReminderChange (e) {
+        this.setState({hatBlockCommentReminder: e.target.checked});
+        try {
+            localStorage.setItem('mw:hat-block-comment-reminder', e.target.checked);
+            window.dispatchEvent(new CustomEvent('mw-settings-changed', {
+                detail: {key: 'hat-block-comment-reminder', value: e.target.checked}
+            }));
+        } catch (err) {
+            // ignore
+        }
+    }
+    handleHatReminderCheckIntervalChange (value) {
+        const num = parseInt(value, 10) || 500;
+        this.setState({hatReminderCheckInterval: num});
+        try {
+            localStorage.setItem('mw:hat-reminder-check-interval', num);
+            window.dispatchEvent(new CustomEvent('mw-settings-changed', {
+                detail: {key: 'hat-reminder-check-interval', value: num}
+            }));
+        } catch (err) {
+            // ignore
+        }
+    }
+    handleHatReminderBlockThresholdChange (value) {
+        const num = parseInt(value, 10) || 10;
+        this.setState({hatReminderBlockThreshold: num});
+        try {
+            localStorage.setItem('mw:hat-reminder-block-threshold', num);
+            window.dispatchEvent(new CustomEvent('mw-settings-changed', {
+                detail: {key: 'hat-reminder-block-threshold', value: num}
+            }));
+        } catch (err) {
+            // ignore
+        }
+    }
+    handleHatReminderCommentTextChange (value) {
+        const text = value || '记得写注释，不然别人和自己以后都看不懂！';
+        this.setState({hatReminderCommentText: text});
+        try {
+            localStorage.setItem('mw:hat-reminder-comment-text', text);
+            window.dispatchEvent(new CustomEvent('mw-settings-changed', {
+                detail: {key: 'hat-reminder-comment-text', value: text}
+            }));
+        } catch (err) {
+            // ignore
+        }
+    }
+    handleHatReminderReset () {
+        const defaults = {
+            hatReminderCheckInterval: 500,
+            hatReminderBlockThreshold: 10,
+            hatReminderCommentText: '记得写注释，不然别人和自己以后都看不懂！'
+        };
+        this.setState(defaults);
+        try {
+            localStorage.setItem('mw:hat-reminder-check-interval', defaults.hatReminderCheckInterval);
+            localStorage.setItem('mw:hat-reminder-block-threshold', defaults.hatReminderBlockThreshold);
+            localStorage.setItem('mw:hat-reminder-comment-text', defaults.hatReminderCommentText);
+            window.dispatchEvent(new CustomEvent('mw-settings-changed', {
+                detail: {key: 'hat-reminder-reset', value: defaults}
+            }));
+        } catch (err) {
+            // ignore
+        }
+    }
     render () {
         const {
             /* eslint-disable no-unused-vars */
@@ -269,6 +343,15 @@ class UsernameModal extends React.Component {
                 onStoreThemeInProjectChange={this.handleStoreThemeInProjectChange}
                 onSuperRefactorChange={this.handleSuperRefactorChange}
                 onMultiWorkspacesChange={this.handleMultiWorkspacesChange}
+                onHatBlockCommentReminderChange={this.handleHatBlockCommentReminderChange}
+                hatBlockCommentReminder={this.state.hatBlockCommentReminder}
+                onHatReminderCheckIntervalChange={this.handleHatReminderCheckIntervalChange}
+                hatReminderCheckInterval={this.state.hatReminderCheckInterval}
+                onHatReminderBlockThresholdChange={this.handleHatReminderBlockThresholdChange}
+                hatReminderBlockThreshold={this.state.hatReminderBlockThreshold}
+                onHatReminderCommentTextChange={this.handleHatReminderCommentTextChange}
+                hatReminderCommentText={this.state.hatReminderCommentText}
+                onHatReminderReset={this.handleHatReminderReset}
                 optimizeAnimations={this.state.optimizeAnimations}
                 debugMode={this.state.debugMode}
                 showFPSCounter={this.state.showFPSCounter}
