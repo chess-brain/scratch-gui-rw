@@ -199,53 +199,66 @@ class Blocks extends React.Component {
             ScratchBlockComment.prototype._hatReminderPatched = true;
 
             const originalCreateEditor = ScratchBlockComment.prototype.createEditor_;
-            ScratchBlockComment.prototype.createEditor_ = function () {
-                const result = originalCreateEditor.call(this);
-                const body = this.foreignObject_ && this.foreignObject_.querySelector('body');
-                if (body && !body.querySelector('button.sc-clear-btn')) {
-                    const HTML_NS = 'http://www.w3.org/1999/xhtml';
-                    const buttonDiv = document.createElementNS(HTML_NS, 'div');
-                    buttonDiv.className = 'hat-reminder-clear-btn-wrapper';
-                    buttonDiv.style.cssText = 'margin: 4px 12px 8px; text-align: right;';
-                    const clearBtn = document.createElementNS(HTML_NS, 'button');
-                    clearBtn.className = 'sc-clear-btn';
-                    clearBtn.textContent = '清空';
-                    clearBtn.style.cssText = 'padding: 2px 10px; font-size: 12px; cursor: pointer; border: none; background: #ff8c1a; color: white; border-radius: 4px;';
-                    clearBtn.addEventListener('click', e => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        this.setText('');
-                        if (this.textarea_) this.textarea_.value = '';
-                    });
-                    buttonDiv.appendChild(clearBtn);
-                    body.appendChild(buttonDiv);
-                    this.clearButtonDiv_ = buttonDiv;
-                }
-                return result;
-            };
+            if (typeof originalCreateEditor === 'function') {
+                ScratchBlockComment.prototype.createEditor_ = function () {
+                    const result = originalCreateEditor.call(this);
+                    // Use class selector to avoid SVG namespace issues with XHTML body elements
+                    // inside a foreignObject. '.scratchCommentBody' is the class set on the
+                    // <body> element by the original createEditor_.
+                    const body = this.foreignObject_ && this.foreignObject_.querySelector('.scratchCommentBody');
+                    if (body && !body.querySelector('button.sc-clear-btn')) {
+                        const HTML_NS = 'http://www.w3.org/1999/xhtml';
+                        const buttonDiv = document.createElementNS(HTML_NS, 'div');
+                        buttonDiv.className = 'hat-reminder-clear-btn-wrapper';
+                        buttonDiv.style.cssText = 'margin: 4px 12px 8px; text-align: right;';
+                        const clearBtn = document.createElementNS(HTML_NS, 'button');
+                        clearBtn.className = 'sc-clear-btn';
+                        clearBtn.textContent = '清空';
+                        clearBtn.style.cssText = 'padding: 2px 10px; font-size: 12px; cursor: pointer; border: none; background: #ff8c1a; color: white; border-radius: 4px;';
+                        clearBtn.addEventListener('click', e => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            if (this.text_ && this.text_.length > 0) {
+                                // setText fires a CommentChange event, which creates
+                                // an undo checkpoint in the workspace undo stack and
+                                // triggers PROJECT_CHANGED for restore point creation.
+                                this.setText('');
+                            }
+                        });
+                        buttonDiv.appendChild(clearBtn);
+                        body.appendChild(buttonDiv);
+                        this.clearButtonDiv_ = buttonDiv;
+                    }
+                    return result;
+                };
+            }
 
             const originalResizeBubble = ScratchBlockComment.prototype.resizeBubble_;
-            ScratchBlockComment.prototype.resizeBubble_ = function () {
-                originalResizeBubble.call(this);
-                if (this.clearButtonDiv_ && this.bubble_) {
-                    const size = this.bubble_.getBubbleSize();
-                    const doubleBorderWidth = 2 * ScratchBubble.BORDER_WIDTH;
-                    const textOffset = ScratchBlockComment.TEXTAREA_OFFSET * 2;
-                    const buttonHeight = 30;
-                    this.textarea_.style.height = (size.height - doubleBorderWidth -
-                        ScratchBubble.TOP_BAR_HEIGHT - textOffset - buttonHeight) + 'px';
-                }
-            };
+            if (typeof originalResizeBubble === 'function' && ScratchBubble) {
+                ScratchBlockComment.prototype.resizeBubble_ = function () {
+                    originalResizeBubble.call(this);
+                    if (this.clearButtonDiv_ && this.bubble_) {
+                        const size = this.bubble_.getBubbleSize();
+                        const doubleBorderWidth = 2 * ScratchBubble.BORDER_WIDTH;
+                        const textOffset = ScratchBlockComment.TEXTAREA_OFFSET * 2;
+                        const buttonHeight = 30;
+                        this.textarea_.style.height = (size.height - doubleBorderWidth -
+                            ScratchBubble.TOP_BAR_HEIGHT - textOffset - buttonHeight) + 'px';
+                    }
+                };
+            }
 
             const originalDispose = ScratchBlockComment.prototype.dispose;
-            ScratchBlockComment.prototype.dispose = function () {
-                if (this.isHatReminder_ && this.block_) {
-                    window.dispatchEvent(new CustomEvent('hatreminder:closed', {
-                        detail: {blockId: this.block_.id}
-                    }));
-                }
-                originalDispose.call(this);
-            };
+            if (typeof originalDispose === 'function') {
+                ScratchBlockComment.prototype.dispose = function () {
+                    if (this.isHatReminder_ && this.block_) {
+                        window.dispatchEvent(new CustomEvent('hatreminder:closed', {
+                            detail: {blockId: this.block_.id}
+                        }));
+                    }
+                    originalDispose.call(this);
+                };
+            }
         }
 
         // Listen for hat reminder close events
