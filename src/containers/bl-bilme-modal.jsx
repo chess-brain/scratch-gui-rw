@@ -2,7 +2,7 @@ import {connect} from 'react-redux';
 import {closeBilmeModal, MODAL_WARPTHEME} from '../reducers/modals';
 import {setTheme} from '../reducers/theme';
 import {applyTheme} from '../lib/themes/themePersistance';
-import {CustomTheme} from '../lib/themes/custom-themes';
+import {CustomTheme, customThemeManager} from '../lib/themes/custom-themes';
 import BilmeModal from '../components/bl-bilme/bilme-modal.jsx';
 
 const mapStateToProps = state => ({
@@ -76,6 +76,56 @@ const mapDispatchToProps = dispatch => ({
             console.error('Error stack:', error.stack);
             // 显示错误提示
             alert(`主题应用失败: ${error.message}`);
+        }
+    },
+    onPixelThemeApply: async theme => {
+        try {
+            console.log('[DEBUG] onPixelThemeApply called for:', theme.name, 'UUID:', theme.uuid);
+            
+            // 关闭主题商店模态窗口
+            dispatch(closeBilmeModal());
+            
+            // 获取像素主题数据
+            const response = await fetch(
+                `https://theme.bilup.org/api/theme/export?uuid=${theme.uuid}&platform=bilup`
+            );
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to fetch theme: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+            
+            const themeData = await response.json();
+            
+            // 直接导入主题，和"导入像素主题"按钮功能一致
+            console.log('[DEBUG] Importing pixel theme data');
+            const results = customThemeManager.importThemes(themeData, false);
+            
+            // 显示导入结果
+            let message = '导入完成！\n';
+            message += `已导入: ${results.imported} 个主题\n`;
+            if (results.skipped > 0) {
+                message += `跳过: ${results.skipped} 个主题（已存在）\n`;
+            }
+            if (results.errors.length > 0) {
+                message += `错误: ${results.errors.length} 个\n${results.errors.join('\n')}`;
+            }
+            
+            alert(message);
+            
+            // 应用导入的第一个主题
+            if (results.imported > 0) {
+                const updatedThemes = customThemeManager.getAllThemes();
+                const latestTheme = updatedThemes[updatedThemes.length - 1];
+                if (latestTheme) {
+                    console.log('[DEBUG] Applying imported theme:', latestTheme.name);
+                    dispatch(setTheme(latestTheme));
+                }
+            }
+        } catch (error) {
+            console.error('Error applying pixel theme:', error);
+            console.error('Error stack:', error.stack);
+            alert(`像素主题导入失败: ${error.message}`);
         }
     }
 });

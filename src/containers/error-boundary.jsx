@@ -48,15 +48,12 @@ class ErrorBoundary extends React.Component {
     }
 
     handleReload () {
-        window.location.replace(window.location.origin + window.location.pathname);
+        window.location.reload();
     }
 
     handleViewRestorePoints () {
         // 在新标签页打开独立的还原点管理器页面
-        const restoreManagerUrl = window.location.protocol === 'file:' ?
-            'https://remixwarp.top/restore-manager.html' :
-            `${window.location.origin}/restore-manager.html`;
-        window.open(restoreManagerUrl, '_blank');
+        window.open('https://remixwarp.pages.dev/restore-manager.html', '_blank');
     }
 
     formatErrorMessage () {

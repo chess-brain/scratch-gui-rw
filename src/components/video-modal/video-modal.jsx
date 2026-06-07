@@ -203,8 +203,7 @@ const VideoModal = props => {
                             <button 
                                 className={styles.dialogButton + ' ' + styles.primaryButton}
                                 onClick={() => {
-                                    const currentUrl = window.location.href.split('?')[0];
-                                    window.location.href = `${currentUrl}?project_url=${encodeURIComponent(props.tutorial.url)}`;
+                                    window.open(`https://remixwarp.pages.dev/editor.html?project_url=${encodeURIComponent(props.tutorial.url)}`, '_blank');
                                 }}
                             >
                                 添加到编辑器

@@ -1,18 +1,18 @@
 const API_KEY_ENCRYPTED = {
-    siliconflow: 'c2stbWFkYXJva3V0b25sZWp4a2dqa3RwaGh1am9qaHlpbmtwZmx0cHh5bnlwanZzdmZx',
+    siliconflow: 'c2stbElYTzBGM0d0NTlwR0treGhzV2VCUGswYmRGNzFoZUY0NTBlWGhVbXpsUjRBVFNI',
     openai: 'U2FsdGVkX1+example_encrypted_key_for_openai',
     anthropic: 'U2FsdGVkX1+example_encrypted_key_for_anthropic'
 };
 
 const API_KEY_CONFIG = {
     siliconflow: {
-        endpoint: 'https://api.siliconflow.cn/v1/chat/completions',
-        model: 'deepseek-ai/DeepSeek-V3',
+        endpoint: 'https://api.iamhc.cn/v1/chat/completions',
+        model: 'auto',
         decryptMethod: 'simple'
     },
     siliconflowImages: {
-        endpoint: 'https://api.siliconflow.cn/v1/images/generations',
-        model: 'Kwai-Kolors/Kolors',
+        endpoint: 'https://api.iamhc.cn/v1/images/generations',
+        model: 'auto',
         decryptMethod: 'simple'
     },
     openai: {

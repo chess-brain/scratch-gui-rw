@@ -477,37 +477,130 @@ class AIPanel extends React.PureComponent {
 
     async generateImage(prompt, apiKey) {
         try {
-            const response = await fetch(IMAGE_API_ENDPOINT, {
+            // 构造让AI生成SVG的提示词
+            const svgPrompt = `你是一个专业的SVG图形设计师。请根据用户的描述，直接输出一个完整的SVG代码。
+
+用户描述：${prompt}
+
+要求：
+1. 只输出SVG代码，不要任何其他文字解释
+2. SVG必须是完整的，包含xmlns声明和适当的viewBox
+3. viewBox建议使用"0 0 100 100"或"0 0 200 200"
+4. 图形要美观、简洁，适合作为Scratch角色造型
+5. 不要使用任何外部引用或依赖
+6. 确保SVG代码格式正确，没有语法错误
+
+现在开始输出SVG代码：`;
+
+            const response = await fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + apiKey
                 },
                 body: JSON.stringify({
-                    model: IMAGE_MODEL,
-                    prompt: prompt,
-                    image_size: '1024x1024',
-                    batch_size: 1,
-                    num_inference_steps: 20,
-                    guidance_scale: 7.5
+                    model: MODEL,
+                    messages: [
+                        {role: 'system', content: '你是一个专业的SVG图形设计师，只输出完整的SVG代码，不要任何其他文字解释。'},
+                        {role: 'user', content: svgPrompt}
+                    ]
                 })
             });
 
             const data = await response.json();
+            console.log('API响应:', data);
             
-            if (data && data.data && data.data[0] && data.data[0].url) {
-                const imageUrl = data.data[0].url;
-                this.setState(state => ({
-                    messages: [...state.messages, {from: 'assistant', text: `![生成的图片](${imageUrl})`}],
-                    loading: false,
-                    generatedImageUrl: imageUrl
-                }), this.scrollToBottom);
-            } else {
-                throw new Error('无法从响应中提取图片URL');
+            let svgContent = null;
+            
+            // 尝试从响应中提取AI的回复
+            if (data && data.choices && data.choices[0]) {
+                const choice = data.choices[0];
+                if (choice.message && choice.message.content) {
+                    svgContent = choice.message.content;
+                } else if (choice.text) {
+                    svgContent = choice.text;
+                }
             }
+            
+            if (!svgContent) {
+                throw new Error('无法从响应中获取AI回复');
+            }
+            
+            console.log('提取的AI回复:', svgContent);
+            
+            // 从AI回复中提取SVG代码
+            let svgCode = this.extractSvgFromText(svgContent);
+            
+            if (!svgCode) {
+                throw new Error('无法从AI回复中提取有效的SVG代码');
+            }
+            
+            console.log('提取的SVG代码:', svgCode);
+            
+            // 清理和验证SVG
+            svgCode = this.cleanAndValidateSvg(svgCode);
+            
+            if (!svgCode) {
+                throw new Error('SVG代码清理后无效');
+            }
+            
+            // 保存SVG并显示
+            this.setState(state => ({
+                messages: [...state.messages, {from: 'assistant', text: 'SVG造型已生成，请查看下方预览。'}],
+                loading: false,
+                generatedSVG: svgCode,
+                generatedImageUrl: null
+            }), this.scrollToBottom);
+            
         } catch (err) {
+            console.error('生成SVG失败:', err);
             this.setState({loading: false, error: String(err)});
         }
+    }
+    
+    // 从文本中提取SVG代码
+    extractSvgFromText(text) {
+        if (!text) return null;
+        
+        // 首先尝试从Markdown代码块中提取
+        const codeBlockMatch = text.match(/```(?:svg)?\s*([\s\S]*?)\s*```/);
+        if (codeBlockMatch && codeBlockMatch[1]) {
+            const svgInBlock = codeBlockMatch[1].trim();
+            if (svgInBlock.includes('<svg')) {
+                return svgInBlock;
+            }
+        }
+        
+        // 如果没有代码块，尝试直接提取<svg>标签
+        const svgTagMatch = text.match(/<svg[\s\S]*?<\/svg>/i);
+        if (svgTagMatch) {
+            return svgTagMatch[0];
+        }
+        
+        // 如果整个文本看起来像SVG，直接返回
+        if (text.trim().startsWith('<svg')) {
+            return text.trim();
+        }
+        
+        return null;
+    }
+    
+    // 清理和验证SVG代码
+    cleanAndValidateSvg(svg) {
+        if (!svg) return null;
+        
+        // 确保包含xmlns声明
+        if (!svg.includes('xmlns="http://www.w3.org/2000/svg"')) {
+            svg = svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+        }
+        
+        // 确保有viewBox
+        if (!svg.includes('viewBox=')) {
+            // 尝试在svg标签中添加viewBox
+            svg = svg.replace('<svg', '<svg viewBox="0 0 100 100"');
+        }
+        
+        return svg;
     }
 
     // 模拟键盘按下事件
@@ -2182,7 +2275,7 @@ ${JSON.stringify(projectData, null, 2)}
                             </div>
                             <div className={styles.warningContent}>
                                 <strong><span>警告：</span></strong>
-                                <span dangerouslySetInnerHTML={{__html: '内容为AI生成,请注意仔细鉴别<br/>此功能用于生成造型，可直接使用。'}} />
+                                <span dangerouslySetInnerHTML={{__html: '生成图片的是文本模型，效果不尽人意<br/>内容为AI生成,请注意仔细鉴别<br/>此功能用于生成造型，可直接使用。'}} />
                             </div>
                         </div>
                         </div>

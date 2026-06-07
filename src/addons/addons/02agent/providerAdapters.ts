@@ -159,11 +159,11 @@ class OpenAICompatibleAdapter implements ProviderAdapter {
           ? {
               reasoning: { enabled: true },
               include_reasoning: true,
-              ...((agent.provider === "deepseek" || agent.provider === "siliconflow" || agent.baseUrl.includes("deepseek"))
+              ...((agent.provider === "deepseek" || agent.provider === "siliconflow" || agent.baseUrl.includes("deepseek") || agent.baseUrl.includes("iamhc"))
                 ? { thinking: { type: "enabled" } }
                 : {}),
             }
-          : (agent.provider === "deepseek" || agent.provider === "siliconflow" || agent.baseUrl.includes("deepseek"))
+          : (agent.provider === "deepseek" || agent.provider === "siliconflow" || agent.baseUrl.includes("deepseek") || agent.baseUrl.includes("iamhc"))
             ? { thinking: { type: "disabled" } }
             : {}),
       }),

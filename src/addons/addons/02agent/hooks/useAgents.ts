@@ -12,49 +12,16 @@ interface ExportedAgentFile {
 
 const DEFAULT_AGENTS: Agent[] = [
   {
-    id: "default-1",
-    name: "OpenAI",
-    provider: "openai",
-    baseUrl: "https://api.openai.com/v1",
-    apiKey: "",
-    models: [
-      {
-        id: "default-1-model-1",
-        name: "Default GPT-3.5",
-        modelId: "gpt-3.5-turbo",
-      }
-    ],
-  },
-  {
-    id: "default-deepseek",
-    name: "RemixWarp免费AI deepseek",
+    id: "default-free-chat",
+    name: "免费AI",
     provider: "custom",
-    baseUrl: "https://api.siliconflow.cn/v1/chat/completions",
-    apiKey: "",
+    baseUrl: "https://api.iamhc.cn/v1/chat/completions",
+    apiKey: "sk-lIXO0F3Gt59pGKkxhsWeBPk0bdF71heF450eXhUmzlR4ATSH",
     models: [
       {
-        id: "default-deepseek-model-1",
-        name: "DeepSeek-R1 (Chat)",
-        modelId: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
-      },
-      {
-        id: "default-glm-model-1",
-        name: "GLM-Z1-9B-0414",
-        modelId: "THUDM/GLM-Z1-9B-0414",
-      },
-    ],
-  },
-  {
-    id: "default-qwen",
-    name: "RemixWarp 免费AI Qwen3",
-    provider: "custom",
-    baseUrl: "https://api.siliconflow.cn/v1/chat/completions",
-    apiKey: "",
-    models: [
-      {
-        id: "default-qwen-model-1",
-        name: "Qwen/Qwen3-8B（Agent）",
-        modelId: "Qwen/Qwen3-8B",
+        id: "default-free-model-1",
+        name: "Qwen3-6B (推荐)",
+        modelId: "auto",
       },
     ],
   },
@@ -62,7 +29,7 @@ const DEFAULT_AGENTS: Agent[] = [
 
 export function useAgents() {
   const [agents, setAgents] = useStorageInfo<Agent[]>("AI_ASSISTANT_AGENTS", DEFAULT_AGENTS);
-  const [currentModelId, setCurrentModelId] = useStorageInfo<string>("AI_ASSISTANT_CURRENT_AGENT_ID", "default-1-model-1");
+  const [currentModelId, setCurrentModelId] = useStorageInfo<string>("AI_ASSISTANT_CURRENT_AGENT_ID", "default-free-model-1");
   const [showSettings, setShowSettings] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
 
@@ -112,25 +79,12 @@ export function useAgents() {
   }, [flattenedModels, currentModelId]);
 
   useEffect(() => {
-    if (!agents.length) {
+    // 强制使用新配置覆盖旧配置
+    if (JSON.stringify(agents) !== JSON.stringify(DEFAULT_AGENTS)) {
       setAgents(DEFAULT_AGENTS);
       setCurrentModelId(DEFAULT_AGENTS[0].models[0].id);
-      return;
     }
-
-    // 确保所有默认 AI 都存在
-    const existingAgentIds = new Set(agents.map(a => a.id));
-    const missingDefaultAgents = DEFAULT_AGENTS.filter(da => !existingAgentIds.has(da.id));
-    
-    if (missingDefaultAgents.length > 0) {
-      const nextAgents = [...agents, ...missingDefaultAgents];
-      setAgents(nextAgents);
-    }
-
-    if (!flattenedModels.some((model) => model.id === currentModelId)) {
-      setCurrentModelId(flattenedModels[0]?.id || "");
-    }
-  }, [agents, currentModelId, setAgents, setCurrentModelId, flattenedModels]);
+  }, [agents, setAgents, setCurrentModelId]);
 
   const handleSaveAgent = (newAgent: Agent) => {
     const nextAgents = editingAgent

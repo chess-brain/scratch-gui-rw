@@ -130,6 +130,11 @@ const messages = defineMessages({
         description: 'Button to apply a theme',
         id: 'bl.bilme.applyTheme'
     },
+    downloadTheme: {
+        defaultMessage: 'Download Theme',
+        description: 'Button to download a theme',
+        id: 'bl.bilme.downloadTheme'
+    },
     openInBilme: {
         defaultMessage: 'Open in Bilme',
         description: 'Button to open theme in Bilme website',
@@ -334,10 +339,68 @@ const BilmeModal = props => {
         window.open(`https://theme.bilup.org/themes/${theme.author}/${slug}`, '_blank');
     };
 
+    const handleDownloadTheme = async theme => {
+        try {
+            const response = await fetch(
+                `https://theme.bilup.org/api/theme/export?uuid=${theme.uuid}&platform=bilup`
+            );
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch theme: ${response.status}`);
+            }
+            
+            const themeData = await response.json();
+            
+            // 设置必要的默认值
+            if (!themeData.name) {
+                themeData.name = theme.name;
+            }
+            if (!themeData.gui) {
+                themeData.gui = 'light';
+            }
+            if (!themeData.blocks) {
+                themeData.blocks = 'three';
+            }
+            
+            // 创建下载链接
+            const blob = new Blob([JSON.stringify(themeData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${theme.name.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Error downloading theme:', error);
+            alert(`下载主题失败: ${error.message}`);
+        }
+    };
+
+    const isPixelTheme = themeName => {
+        const pixelKeywords = ['像素主题', '像素', 'RW', 'pixel', 'Pixel Theme'];
+        const lowerName = themeName.toLowerCase();
+        return pixelKeywords.some(keyword => lowerName.includes(keyword.toLowerCase()));
+    };
+
     const handleApplyTheme = async theme => {
-        if (props.onThemeApply) {
-            try {
-                console.log('Applying theme:', theme.name, 'UUID:', theme.uuid);
+        try {
+            console.log('Applying theme:', theme.name, 'UUID:', theme.uuid);
+            
+            // 检测是否为像素主题
+            if (isPixelTheme(theme.name)) {
+                console.log('Detected pixel theme, opening pixel editor');
+                if (props.onPixelThemeApply) {
+                    props.onPixelThemeApply(theme);
+                } else {
+                    console.error('[ERROR] onPixelThemeApply is not defined!');
+                    alert('像素主题导入功能不可用');
+                }
+                return;
+            }
+            
+            if (props.onThemeApply) {
                 
                 const response = await fetch(
                     `https://theme.bilup.org/api/theme/export?uuid=${theme.uuid}&platform=bilup`
@@ -375,12 +438,12 @@ const BilmeModal = props => {
                 console.log('Final theme data:', themeData);
                 
                 props.onThemeApply(themeData);
-            } catch (err) {
-                console.error('Error applying theme:', err);
-                console.error('Error stack:', err.stack);
-                // 显示错误提示
-                alert(`主题应用失败: ${err.message}`);
             }
+        } catch (err) {
+            console.error('Error applying theme:', err);
+            console.error('Error stack:', err.stack);
+            // 显示错误提示
+            alert(`主题应用失败: ${err.message}`);
         }
     };
 
@@ -528,6 +591,13 @@ const BilmeModal = props => {
                                             onClick={() => handleApplyTheme(theme)}
                                         >
                                             <FormattedMessage {...messages.applyTheme} />
+                                        </button>
+                                        <button
+                                            className={styles.downloadBtn}
+                                            onClick={() => handleDownloadTheme(theme)}
+                                            title={props.intl.formatMessage(messages.downloadTheme)}
+                                        >
+                                            <Download size={14} />
                                         </button>
                                         <button
                                             className={styles.openBtn}

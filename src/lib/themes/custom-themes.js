@@ -399,6 +399,271 @@ class PixelUtils {
         }
         return pattern;
     }
+
+    /**
+     * Convert hex color to number
+     * @param {string} hex - Hex color string (e.g., '#ff6b6b')
+     * @returns {number} Numeric representation of the color
+     */
+    static hexToNumber(hex) {
+        if (!hex || typeof hex !== 'string') return 0;
+        const cleanHex = hex.replace('#', '');
+        // Handle 3-digit hex
+        if (cleanHex.length === 3) {
+            return parseInt(cleanHex[0] + cleanHex[0] + cleanHex[1] + cleanHex[1] + cleanHex[2] + cleanHex[2], 16);
+        }
+        // Handle 6-digit hex
+        if (cleanHex.length === 6) {
+            return parseInt(cleanHex, 16);
+        }
+        // Handle 8-digit hex (with alpha)
+        if (cleanHex.length === 8) {
+            return parseInt(cleanHex, 16);
+        }
+        return 0;
+    }
+
+    /**
+     * Convert number to hex color
+     * @param {number} num - Numeric representation of color
+     * @returns {string} Hex color string
+     */
+    static numberToHex(num) {
+        if (typeof num !== 'number' || num < 0) return '#000000';
+        let hex = num.toString(16).padStart(6, '0');
+        // Ensure 6 digits (ignore alpha for now)
+        if (hex.length > 6) hex = hex.slice(-6);
+        return '#' + hex;
+    }
+
+    /**
+     * Simple LZ77 compression (synchronous)
+     */
+    static lz77Compress(data) {
+        const result = [];
+        const windowSize = 4096;
+        
+        let i = 0;
+        while (i < data.length) {
+            let bestLen = 0;
+            let bestDist = 0;
+            
+            // Search in sliding window
+            const windowStart = Math.max(0, i - windowSize);
+            const maxLen = Math.min(18, data.length - i); // Max match length 18
+            
+            for (let dist = 1; dist <= i - windowStart && dist <= 4095; dist++) {
+                let len = 0;
+                while (len < maxLen && data[i + len] === data[i - dist + len]) {
+                    len++;
+                }
+                if (len > bestLen) {
+                    bestLen = len;
+                    bestDist = dist;
+                }
+            }
+            
+            if (bestLen >= 3) {
+                // Encode as LZ77 reference
+                const flag = 0x80 | ((bestLen - 3) << 4) | ((bestDist >> 8) & 0x0F);
+                const distLow = bestDist & 0xFF;
+                result.push(flag, distLow);
+                i += bestLen;
+            } else {
+                // Encode as literal
+                result.push(data[i]);
+                i++;
+            }
+        }
+        
+        return new Uint8Array(result);
+    }
+
+    /**
+     * Simple LZ77 decompression (synchronous)
+     */
+    static lz77Decompress(compressed) {
+        const result = [];
+        let i = 0;
+        
+        while (i < compressed.length) {
+            const byte = compressed[i];
+            
+            if (byte & 0x80) {
+                // LZ77 reference
+                const len = ((byte >> 4) & 0x0F) + 3;
+                const dist = ((byte & 0x0F) << 8) | compressed[i + 1];
+                
+                const start = result.length - dist;
+                for (let j = 0; j < len; j++) {
+                    result.push(result[start + j]);
+                }
+                i += 2;
+            } else {
+                // Literal
+                result.push(byte);
+                i++;
+            }
+        }
+        
+        return new Uint8Array(result);
+    }
+
+    /**
+     * Compress pixel data using color indexing + LZ77 compression
+     * @param {Array} pixelData - 2D array of pixel colors
+     * @returns {object} Compressed data
+     */
+    static compressPixelData(pixelData) {
+        if (!Array.isArray(pixelData) || pixelData.length === 0) {
+            return {z: '', w: 0, h: 0};
+        }
+
+        const width = pixelData[0]?.length || 0;
+        const height = pixelData.length;
+        
+        // Build color frequency map
+        const colorCounts = {};
+        for (const row of pixelData) {
+            for (const color of row) {
+                if (color) {
+                    colorCounts[color] = (colorCounts[color] || 0) + 1;
+                }
+            }
+        }
+
+        // Sort colors by frequency and limit to 256
+        const sortedColors = Object.keys(colorCounts).sort((a, b) => colorCounts[b] - colorCounts[a]).slice(0, 256);
+        
+        // Create color map
+        const colorMap = {};
+        sortedColors.forEach((color, index) => {
+            colorMap[color] = index;
+        });
+
+        // Create binary buffer:
+        // 1 byte: color count
+        // 3 bytes * color count: RGB colors
+        // 1 byte per pixel: color index
+        const headerSize = 1 + sortedColors.length * 3;
+        const bufferSize = headerSize + width * height;
+        const buffer = new Uint8Array(bufferSize);
+        let offset = 0;
+        
+        // Write color count
+        buffer[offset++] = sortedColors.length;
+        
+        // Write color palette
+        for (const color of sortedColors) {
+            const hex = color.replace('#', '');
+            buffer[offset++] = parseInt(hex.slice(0, 2), 16);
+            buffer[offset++] = parseInt(hex.slice(2, 4), 16);
+            buffer[offset++] = parseInt(hex.slice(4, 6), 16);
+        }
+        
+        // Write pixel data
+        for (const row of pixelData) {
+            for (const color of row) {
+                buffer[offset++] = colorMap[color] || 0;
+            }
+        }
+
+        // Apply LZ77 compression
+        const compressed = PixelUtils.lz77Compress(buffer);
+        
+        // Convert to Base64
+        const base64Data = btoa(String.fromCharCode(...compressed));
+
+        return {
+            z: base64Data,  // Compressed pixel data (LZ77 + Base64)
+            w: width,       // Width
+            h: height       // Height
+        };
+    }
+
+    /**
+     * Decompress pixel data
+     * @param {object} compressedData - Compressed data object
+     * @returns {Array} 2D array of pixel colors
+     */
+    static decompressPixelData(compressedData) {
+        if (!compressedData || !compressedData.z) {
+            return [];
+        }
+
+        const {z: base64Data, w: width, h: height} = compressedData;
+
+        const actualWidth = width || 900;
+        const actualHeight = height || 24;
+        
+        // Decode Base64
+        const compressedString = atob(base64Data);
+        const compressed = new Uint8Array(compressedString.length);
+        for (let i = 0; i < compressedString.length; i++) {
+            compressed[i] = compressedString.charCodeAt(i);
+        }
+        
+        // Decompress LZ77
+        const rawBuffer = PixelUtils.lz77Decompress(compressed);
+        
+        // Parse header
+        let offset = 0;
+        const colorCount = rawBuffer[offset++];
+        const colorPalette = [];
+        
+        for (let i = 0; i < colorCount; i++) {
+            const r = rawBuffer[offset++];
+            const g = rawBuffer[offset++];
+            const b = rawBuffer[offset++];
+            colorPalette.push(`#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`);
+        }
+        
+        // Extract pixel indices
+        const pixelIndices = rawBuffer.slice(offset);
+        
+        // Convert to 2D array
+        const pixelData = [];
+        let idx = 0;
+        
+        for (let y = 0; y < actualHeight; y++) {
+            const row = [];
+            for (let x = 0; x < actualWidth; x++) {
+                const index = pixelIndices[idx] || 0;
+                row.push(colorPalette[index] || '#000000');
+                idx++;
+            }
+            pixelData.push(row);
+        }
+
+        return pixelData;
+    }
+
+    /**
+     * Decompress pixel data synchronously (alias)
+     */
+    static decompressPixelDataSync(compressedData) {
+        return PixelUtils.decompressPixelData(compressedData);
+    }
+
+    /**
+     * Check if pixel data is compressed
+     * @param {object} accent - Accent object to check
+     * @returns {boolean} True if compressed
+     */
+    static isCompressed(accent) {
+        if (!accent || typeof accent !== 'object') {
+            return false;
+        }
+        // New LZ77 compression format
+        if (accent.z && typeof accent.z === 'string') {
+            return true;
+        }
+        // Old compression formats for backward compatibility
+        if (accent.c && accent.d && typeof accent.d === 'string') {
+            return true;
+        }
+        return false;
+    }
 }
 
 /**
@@ -580,8 +845,12 @@ class CustomTheme extends Theme {
         
         // Check if it's a pixel theme
         if (this.customAccent && this.customAccent.pixelData) {
+            const pixelData = this.customAccent.pixelData;
+            // Compress pixel data if it's not already compressed
+            const compressedPixelData = PixelUtils.isCompressed(pixelData) ? 
+                pixelData : PixelUtils.compressPixelData(pixelData);
             accentExport = {
-                pixelData: this.customAccent.pixelData,
+                pixelData: compressedPixelData,
                 pixelSize: this.customAccent.pixelSize || 2,
                 guiColors: this.customAccent.guiColors
             };
@@ -781,9 +1050,19 @@ class CustomTheme extends Theme {
             const direction = accentToUse.direction || '90';
             const primaryColor = colors[0] ? colors[0].color : '#ff6b6b';
             accentToUse = GradientUtils.createGradientAccent(colors, primaryColor, {direction});
-        } else if (accentToUse && typeof accentToUse === 'object' && Array.isArray(accentToUse.pixelData)) {
-            // Check if accent is in pixel format (pixelData array)
-            const pixelData = accentToUse.pixelData;
+        } else if (accentToUse && typeof accentToUse === 'object' && accentToUse.pixelData) {
+            // Check if accent is in pixel format (pixelData)
+            let pixelData = accentToUse.pixelData;
+            
+            // Check if pixel data is compressed
+            if (PixelUtils.isCompressed(pixelData)) {
+                // Decompress the pixel data (synchronous for import)
+                pixelData = PixelUtils.decompressPixelDataSync(pixelData);
+            } else if (!Array.isArray(pixelData)) {
+                // Handle other formats if needed
+                pixelData = [];
+            }
+            
             const primaryColor = accentToUse.guiColors && accentToUse.guiColors['motion-primary'] ? accentToUse.guiColors['motion-primary'] : '#ff6b6b';
             const pixelSize = accentToUse.pixelSize || 2;
             accentToUse = PixelUtils.createPixelAccent(pixelData, primaryColor, {pixelSize});
@@ -1189,7 +1468,7 @@ class CustomThemeManager {
         const themes = this.getAllThemes().map(theme => theme.export());
         return {
             version: '2.0',
-            platform: 'RemixWarp',
+            platform: 'Bilup',
             timestamp: Date.now(),
             themes: themes
         };

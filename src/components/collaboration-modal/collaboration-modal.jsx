@@ -282,10 +282,7 @@ class CollaborationModal extends Component {
 
         try {
             await this.props.onJoinRoom(roomId, username);
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('room', roomId);
-            currentUrl.searchParams.delete('username');
-            window.history.replaceState(null, null, currentUrl.toString());
+            // 桌面应用不更新浏览器历史记录
             this.setState({ roomId });
         } catch (error) {
             console.error('Failed to join room:', error);
@@ -311,10 +308,7 @@ class CollaborationModal extends Component {
 
         try {
             await this.props.onCreateRoom(roomCode, username, 'public');
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('room', roomCode);
-            currentUrl.searchParams.delete('username');
-            window.history.replaceState(null, null, currentUrl.toString());
+            // 桌面应用不更新浏览器历史记录
             this.setState({ roomId: roomCode });
         } catch (error) {
             console.error('Failed to create room:', error);
@@ -345,10 +339,7 @@ class CollaborationModal extends Component {
     }
 
     handleCopyRoomUrl () {
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set('room', this.props.roomId);
-        currentUrl.searchParams.delete('username');
-        const roomUrl = currentUrl.toString();
+        const roomUrl = `https://remixwarp.pages.dev/editor.html?room=${this.props.roomId}`;
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(roomUrl).then(() => {

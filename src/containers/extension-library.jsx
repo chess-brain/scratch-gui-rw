@@ -287,7 +287,7 @@ const fetchLibrary = async () => {
                 }),
                 docsURI: extension.docsURI || null,
                 samples: extension.samples ? extension.samples.map(sample => ({
-                    href: `${process.env.ROOT}editor?project_url=${sample.href.startsWith('http') ? sample.href : window.location.origin + sample.href}`,
+                    href: `https://remixwarp.pages.dev/editor.html?project_url=${sample.href.startsWith('http') ? sample.href : 'https://remixwarp.pages.dev' + sample.href}`,
                     text: sample.text
                 })) : null,
                 incompatibleWithScratch: extension.incompatibleWithScratch || true,
@@ -334,7 +334,7 @@ const fetchLibrary = async () => {
                 }),
                 docsURI: extension.docsURI || null,
                 samples: extension.samples ? extension.samples.map(sample => ({
-                    href: `${process.env.ROOT}editor?project_url=${window.location.origin}${sample.href}`,
+                    href: `https://remixwarp.pages.dev/editor.html?project_url=https://remixwarp.pages.dev${sample.href}`,
                     text: sample.text
                 })) : null,
                 incompatibleWithScratch: extension.incompatibleWithScratch || true,
@@ -427,7 +427,7 @@ const fetchLibrary = async () => {
                 }),
                 docsURI: extension.docsURI || null,
                 samples: extension.samples ? extension.samples.map(sample => ({
-                    href: `${process.env.ROOT}editor?project_url=${sample.href.startsWith('http') ? sample.href : window.location.origin + sample.href}`,
+                    href: `https://remixwarp.pages.dev/editor.html?project_url=${sample.href.startsWith('http') ? sample.href : 'https://remixwarp.pages.dev' + sample.href}`,
                     text: sample.text
                 })) : null,
                 incompatibleWithScratch: extension.incompatibleWithScratch || true,
@@ -474,7 +474,7 @@ const fetchLibrary = async () => {
                 }),
                 docsURI: extension.docsURI || null,
                 samples: extension.samples ? extension.samples.map(sample => ({
-                    href: `${process.env.ROOT}editor?project_url=${sample.href.startsWith('http') ? sample.href : window.location.origin + sample.href}`,
+                    href: `https://remixwarp.pages.dev/editor.html?project_url=${sample.href.startsWith('http') ? sample.href : 'https://remixwarp.pages.dev' + sample.href}`,
                     text: sample.text
                 })) : null,
                 incompatibleWithScratch: extension.incompatibleWithScratch || true,

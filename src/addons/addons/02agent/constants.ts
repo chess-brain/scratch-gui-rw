@@ -7,5 +7,7 @@ export const PROVIDER_DEFAULT_URLS: Record<string, string> = {
   azure: "",
   custom: "",
   custom_anthropic: "",
-  siliconflow: "https://api.siliconflow.cn/v1/chat/completions",
+  siliconflow: "https://api.iamhc.cn/v1/chat/completions",
 };
+
+export const DEFAULT_FREE_API_KEY = "sk-yMDXZzP0LeW67pWHCmsxJsnYYPeBcLBsk7MzeDxwZs8O1rLE";

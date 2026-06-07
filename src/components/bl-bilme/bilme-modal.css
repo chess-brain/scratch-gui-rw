@@ -369,6 +369,23 @@
     background: var(--ui-secondary);
 }
 
+.downloadBtn {
+    padding: 8px 10px;
+    background: var(--ui-tertiary);
+    border: 1px solid var(--ui-black-transparent);
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+}
+
+.downloadBtn:hover {
+    background: var(--ui-secondary);
+}
+
 /* Loading, Error, No Themes States */
 .loadingContainer,
 .errorContainer,

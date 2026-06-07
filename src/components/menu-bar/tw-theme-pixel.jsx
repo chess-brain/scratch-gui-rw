@@ -11,9 +11,45 @@ import styles from './settings-menu.css';
 
 const PixelEditorApp = injectIntl(props => {
     const {intl} = props;
-    const [name, setName] = React.useState(props.initialName || '');
-    const [description, setDescription] = React.useState(props.initialDescription || '');
-    const [pixelData, setPixelData] = React.useState(props.initialPixelData || (() => {
+    
+    // 尝试从 localStorage 读取导入的像素主题数据
+    const getInitialData = () => {
+        try {
+            const storedData = localStorage.getItem('tw:importing-pixel-theme');
+            if (storedData) {
+                localStorage.removeItem('tw:importing-pixel-theme');
+                const parsed = JSON.parse(storedData);
+                if (parsed.theme && parsed.source === 'bilme') {
+                    const theme = parsed.theme;
+                    if (theme.accent && theme.accent.pixelData) {
+                        let pixelData = theme.accent.pixelData;
+                        
+                        // 如果是压缩格式，进行解压
+                        if (PixelUtils.isCompressed(pixelData)) {
+                            pixelData = PixelUtils.decompressPixelData(pixelData);
+                        }
+                        
+                        return {
+                            name: theme.name || '',
+                            description: theme.description || '',
+                            pixelData: pixelData,
+                            primaryColor: theme.accent.guiColors?.['motion-primary'] || '#ff6b6b'
+                        };
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to load imported pixel theme:', e);
+            localStorage.removeItem('tw:importing-pixel-theme');
+        }
+        return null;
+    };
+    
+    const importedData = getInitialData();
+    
+    const [name, setName] = React.useState(importedData?.name || props.initialName || '');
+    const [description, setDescription] = React.useState(importedData?.description || props.initialDescription || '');
+    const [pixelData, setPixelData] = React.useState(importedData?.pixelData || props.initialPixelData || (() => {
         // 初始化像素数据为背景色
         const data = [];
         for (let y = 0; y < 24; y++) {
@@ -25,7 +61,7 @@ const PixelEditorApp = injectIntl(props => {
         }
         return data;
     })());
-    const [primaryColor, setPrimaryColor] = React.useState(props.initialPrimaryColor || '#ff6b6b');
+    const [primaryColor, setPrimaryColor] = React.useState(importedData?.primaryColor || props.initialPrimaryColor || '#ff6b6b');
     const [currentColor, setCurrentColor] = React.useState('#000000');
     const [backgroundColor, setBackgroundColor] = React.useState('#75c1c4');
     const [pixelSize, setPixelSize] = React.useState(props.initialPixelSize || 10);
@@ -724,6 +760,9 @@ const PixelEditorApp = injectIntl(props => {
                         // 生成像素艺术accent
                         const pixelAccent = PixelUtils.createPixelAccent(pixelData, primaryColor, {pixelSize: 2});
                         
+                        // 压缩像素数据（使用LZ77压缩）
+                        const compressedPixelData = PixelUtils.compressPixelData(pixelData);
+                        
                         // 创建主题对象，使用与CustomTheme.export()相同的格式
                         const themeData = {
                             uuid: `custom-theme-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -732,7 +771,7 @@ const PixelEditorApp = injectIntl(props => {
                             description,
                             author: 'User',
                             accent: {
-                                pixelData,
+                                pixelData: compressedPixelData,
                                 pixelSize: 2,
                                 guiColors: pixelAccent.guiColors
                             },
@@ -746,12 +785,13 @@ const PixelEditorApp = injectIntl(props => {
                         // 包装成与exportAllThemes相同的格式
                         const exportData = {
                             version: '2.0',
-                            platform: 'RemixWarp',
+                            platform: 'Bilup',
                             timestamp: Date.now(),
                             themes: [themeData]
                         };
                         
-                        const dataStr = JSON.stringify(exportData, null, 2);
+                        // 使用一行压缩格式导出
+                        const dataStr = JSON.stringify(exportData);
                         const dataBlob = new Blob([dataStr], {type: 'application/json'});
                         const url = URL.createObjectURL(dataBlob);
                         const link = document.createElement('a');

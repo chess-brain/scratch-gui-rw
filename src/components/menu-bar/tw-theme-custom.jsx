@@ -991,6 +991,14 @@ class CustomThemeMenu extends React.Component {
         this._unsubscribeCustomThemes = customThemeManager.subscribe(() => {
             this.safeSetState({customThemes: customThemeManager.getAllThemes()});
         });
+        
+        // Listen for pixel theme import from Bilme marketplace
+        this._handlePixelEditorOpen = () => {
+            if (this._isMounted) {
+                this.openPixelEditorWindow();
+            }
+        };
+        document.addEventListener('tw-open-pixel-editor', this._handlePixelEditorOpen);
     }
 
     componentDidUpdate () {
@@ -1133,6 +1141,12 @@ class CustomThemeMenu extends React.Component {
                 // Ignore abort errors
             }
             this._activeFileReader = null;
+        }
+
+        // Clean up pixel editor event listener
+        if (this._handlePixelEditorOpen) {
+            document.removeEventListener('tw-open-pixel-editor', this._handlePixelEditorOpen);
+            this._handlePixelEditorOpen = null;
         }
 
         // Restore preview if still active
@@ -1962,7 +1976,7 @@ class CustomThemeMenu extends React.Component {
                 version: '2.0',
                 timestamp: Date.now(),
                 themes: [theme.export()],
-                platform: 'RemixWarp'
+                platform: 'Bilup'
             };
             const blob = new Blob([JSON.stringify(exportData, null, 2)], {
                 type: 'application/json'
