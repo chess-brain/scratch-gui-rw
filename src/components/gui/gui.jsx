@@ -62,6 +62,7 @@ import TutorialModal from '../../containers/tutorial-modal.jsx';
 import VideoModal from '../../containers/video-modal.jsx';
 import UpdateLogModal from '../../containers/update-log-modal.jsx';
 import BilmeModal from '../../containers/bl-bilme-modal.jsx';
+import WarpthemeModal from '../../containers/warptheme-modal.jsx';
 import GandiHelp from '../gandi-help/gandi-help.jsx';
 import AEReadMe from '../../containers/ae-readme.jsx'
 import { loadData } from '../ae-readme/ae-readme.jsx'
@@ -918,6 +919,7 @@ const GUIComponent = props => {
             <VideoModal />
             <UpdateLogModal />
             <BilmeModal />
+            <WarpthemeModal />
             {onboardingVisible && <Onboarding />}
             {props.gandiHelpModal && <GandiHelp onClose={() => props.dispatch && props.dispatch({type: 'scratch-gui/modals/CLOSE_MODAL', modal: 'gandiHelpModal'})} />}
             {customThemeVisible && <CustomThemeModal />}

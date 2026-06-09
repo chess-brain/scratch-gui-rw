@@ -735,6 +735,12 @@ class MenuBar extends React.Component {
                     kittenBlock.fields.sprite = '__mouse';
                 }
 
+                if (block.opcode === 'motion_changexby' || block.opcode === 'motion_setx') {
+                    kittenBlock.fields.coordinary = 'x';
+                } else if (block.opcode === 'motion_changeyby' || block.opcode === 'motion_sety') {
+                    kittenBlock.fields.coordinary = 'y';
+                }
+
                 if (block.opcode === 'motion_setrotationstyle') {
                     if (block.fields && block.fields.STYLE) {
                         const styleValue = Array.isArray(block.fields.STYLE) ? block.fields.STYLE[0] : block.fields.STYLE;
@@ -904,181 +910,270 @@ class MenuBar extends React.Component {
                     }
                 }
                 
-                if (isMotionGlideto) {
-                    const menuInput = block.inputs && block.inputs.TO;
-                    if (menuInput && Array.isArray(menuInput[1]) && menuInput[1][0] === 3) {
-                        const menuBlockId = menuInput[1][1];
-                        const menuBlock = scratchBlocks[menuBlockId];
-                        if (menuBlock && menuBlock.fields && menuBlock.fields.TO) {
-                            const toValue = Array.isArray(menuBlock.fields.TO) ? menuBlock.fields.TO[0] : menuBlock.fields.TO;
-                            if (toValue === '_random_') {
-                                const randomXBlockId = `shadow_random_x_${shadowBlockCounter++}`;
-                                const randomYBlockId = `shadow_random_y_${shadowBlockCounter++}`;
-                                const randAXId = `rand_a_x_${shadowBlockCounter++}`;
-                                const randBXId = `rand_b_x_${shadowBlockCounter++}`;
-                                const randAYId = `rand_a_y_${shadowBlockCounter++}`;
-                                const randBYId = `rand_b_y_${shadowBlockCounter++}`;
-
-                                kittenBlocks[randAXId] = {
-                                    type: 'math_number',
-                                    id: randAXId,
-                                    comment: null,
-                                    is_shadow: true,
-                                    collapsed: false,
-                                    disabled: false,
-                                    deletable: true,
-                                    movable: true,
-                                    editable: true,
-                                    visible: 'visible',
-                                    location: [0, 0],
-                                    shadows: {},
-                                    fields: { NUM: '-240' },
-                                    field_constraints: { NUM: { min: null, max: null, precision: 0, mod: null } },
-                                    field_extra_attr: {},
-                                    mutation: '',
-                                    is_output: true,
-                                    parent_id: randomXBlockId
-                                };
-                                kittenBlocks[randBXId] = {
-                                    type: 'math_number',
-                                    id: randBXId,
-                                    comment: null,
-                                    is_shadow: true,
-                                    collapsed: false,
-                                    disabled: false,
-                                    deletable: true,
-                                    movable: true,
-                                    editable: true,
-                                    visible: 'visible',
-                                    location: [0, 0],
-                                    shadows: {},
-                                    fields: { NUM: '240' },
-                                    field_constraints: { NUM: { min: null, max: null, precision: 0, mod: null } },
-                                    field_extra_attr: {},
-                                    mutation: '',
-                                    is_output: true,
-                                    parent_id: randomXBlockId
-                                };
-                                kittenBlocks[randomXBlockId] = {
-                                    type: 'random',
-                                    id: randomXBlockId,
-                                    comment: null,
-                                    is_shadow: true,
-                                    collapsed: false,
-                                    disabled: false,
-                                    deletable: true,
-                                    movable: true,
-                                    editable: true,
-                                    visible: 'visible',
-                                    location: [0, 0],
-                                    shadows: {
-                                        a: `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${randAXId}" visible="visible"><field constraints="-Infinity,Infinity,0," name="NUM">-240</field></shadow>`,
-                                        b: `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${randBXId}" visible="visible"><field constraints="-Infinity,Infinity,0," name="NUM">240</field></shadow>`
-                                    },
-                                    fields: {},
-                                    field_constraints: {},
-                                    field_extra_attr: {},
-                                    mutation: '',
-                                    is_output: true,
-                                    parent_id: blockId
-                                };
-
-                                kittenBlocks[randAYId] = {
-                                    type: 'math_number',
-                                    id: randAYId,
-                                    comment: null,
-                                    is_shadow: true,
-                                    collapsed: false,
-                                    disabled: false,
-                                    deletable: true,
-                                    movable: true,
-                                    editable: true,
-                                    visible: 'visible',
-                                    location: [0, 0],
-                                    shadows: {},
-                                    fields: { NUM: '-180' },
-                                    field_constraints: { NUM: { min: null, max: null, precision: 0, mod: null } },
-                                    field_extra_attr: {},
-                                    mutation: '',
-                                    is_output: true,
-                                    parent_id: randomYBlockId
-                                };
-                                kittenBlocks[randBYId] = {
-                                    type: 'math_number',
-                                    id: randBYId,
-                                    comment: null,
-                                    is_shadow: true,
-                                    collapsed: false,
-                                    disabled: false,
-                                    deletable: true,
-                                    movable: true,
-                                    editable: true,
-                                    visible: 'visible',
-                                    location: [0, 0],
-                                    shadows: {},
-                                    fields: { NUM: '180' },
-                                    field_constraints: { NUM: { min: null, max: null, precision: 0, mod: null } },
-                                    field_extra_attr: {},
-                                    mutation: '',
-                                    is_output: true,
-                                    parent_id: randomYBlockId
-                                };
-                                kittenBlocks[randomYBlockId] = {
-                                    type: 'random',
-                                    id: randomYBlockId,
-                                    comment: null,
-                                    is_shadow: true,
-                                    collapsed: false,
-                                    disabled: false,
-                                    deletable: true,
-                                    movable: true,
-                                    editable: true,
-                                    visible: 'visible',
-                                    location: [0, 0],
-                                    shadows: {
-                                        a: `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${randAYId}" visible="visible"><field constraints="-Infinity,Infinity,0," name="NUM">-180</field></shadow>`,
-                                        b: `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${randBYId}" visible="visible"><field constraints="-Infinity,Infinity,0," name="NUM">180</field></shadow>`
-                                    },
-                                    fields: {},
-                                    field_constraints: {},
-                                    field_extra_attr: {},
-                                    mutation: '',
-                                    is_output: true,
-                                    parent_id: blockId
-                                };
-
-                                const timeShadowId = `shadow_time_${shadowBlockCounter++}`;
-                                kittenBlocks[timeShadowId] = {
-                                    type: 'math_number',
-                                    id: timeShadowId,
-                                    comment: null,
-                                    is_shadow: true,
-                                    collapsed: false,
-                                    disabled: false,
-                                    deletable: true,
-                                    movable: true,
-                                    editable: true,
-                                    visible: 'visible',
-                                    location: [0, 0],
-                                    shadows: {},
-                                    fields: { NUM: '1' },
-                                    field_constraints: { NUM: { min: 0, max: null, precision: 0, mod: null } },
-                                    field_extra_attr: {},
-                                    mutation: '',
-                                    is_output: true,
-                                    parent_id: blockId
-                                };
-
-                                kittenBlock.shadows['time'] = `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${timeShadowId}" visible="visible"><field constraints="0,Infinity,0," name="NUM">1</field></shadow>`;
-                                kittenBlock.shadows['x'] = `<shadow xmlns="http://www.w3.org/1999/xhtml" type="random" id="${randomXBlockId}" visible="visible"></shadow>`;
-                                kittenBlock.shadows['y'] = `<shadow xmlns="http://www.w3.org/1999/xhtml" type="random" id="${randomYBlockId}" visible="visible"></shadow>`;
-
-                                if (!kittenConnections[blockId]) kittenConnections[blockId] = {};
-                                kittenConnections[blockId][timeShadowId] = { type: 'input', input_type: 'value', input_name: 'time' };
-                                kittenConnections[blockId][randomXBlockId] = { type: 'input', input_type: 'value', input_name: 'x' };
-                                kittenConnections[blockId][randomYBlockId] = { type: 'input', input_type: 'value', input_name: 'y' };
+                if (isMotionGlideto || isMotionGlideSecsToXY) {
+                    let isRandomGlide = false;
+                    
+                    if (isMotionGlideto) {
+                        const menuInput = block.inputs && block.inputs.TO;
+                        if (menuInput && Array.isArray(menuInput[1])) {
+                            if (menuInput[1][0] === 3) {
+                                const menuBlockId = menuInput[1][1];
+                                const menuBlock = scratchBlocks[menuBlockId];
+                                if (menuBlock && menuBlock.fields) {
+                                    const toField = menuBlock.fields.TO || menuBlock.fields.TOWARDS;
+                                    if (toField) {
+                                        const toValue = Array.isArray(toField) ? toField[0] : toField;
+                                        if (toValue === '_random_' || toValue === 'random position') {
+                                            isRandomGlide = true;
+                                        }
+                                    }
+                                }
                             }
                         }
+                    }
+
+                    if (isRandomGlide) {
+                        const randomXBlockId = `shadow_random_x_${shadowBlockCounter++}`;
+                        const randomYBlockId = `shadow_random_y_${shadowBlockCounter++}`;
+                        const randAXId = `rand_a_x_${shadowBlockCounter++}`;
+                        const randBXId = `rand_b_x_${shadowBlockCounter++}`;
+                        const randAYId = `rand_a_y_${shadowBlockCounter++}`;
+                        const randBYId = `rand_b_y_${shadowBlockCounter++}`;
+
+                        kittenBlocks[randAXId] = {
+                            type: 'math_number',
+                            id: randAXId,
+                            comment: null,
+                            is_shadow: true,
+                            collapsed: false,
+                            disabled: false,
+                            deletable: true,
+                            movable: true,
+                            editable: true,
+                            visible: 'visible',
+                            location: [0, 0],
+                            shadows: {},
+                            fields: { NUM: '-1000' },
+                            field_constraints: { NUM: { min: null, max: null, precision: 0, mod: null } },
+                            field_extra_attr: {},
+                            mutation: '',
+                            is_output: true,
+                            parent_id: randomXBlockId
+                        };
+                        kittenBlocks[randBXId] = {
+                            type: 'math_number',
+                            id: randBXId,
+                            comment: null,
+                            is_shadow: true,
+                            collapsed: false,
+                            disabled: false,
+                            deletable: true,
+                            movable: true,
+                            editable: true,
+                            visible: 'visible',
+                            location: [0, 0],
+                            shadows: {},
+                            fields: { NUM: '1000' },
+                            field_constraints: { NUM: { min: null, max: null, precision: 0, mod: null } },
+                            field_extra_attr: {},
+                            mutation: '',
+                            is_output: true,
+                            parent_id: randomXBlockId
+                        };
+                        kittenBlocks[randomXBlockId] = {
+                            type: 'random',
+                            id: randomXBlockId,
+                            comment: null,
+                            is_shadow: true,
+                            collapsed: false,
+                            disabled: false,
+                            deletable: true,
+                            movable: true,
+                            editable: true,
+                            visible: 'visible',
+                            location: [0, 0],
+                            shadows: {
+                                a: `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${randAXId}" visible="visible"><field constraints="-Infinity,Infinity,0," name="NUM">-1000</field></shadow>`,
+                                b: `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${randBXId}" visible="visible"><field constraints="-Infinity,Infinity,0," name="NUM">1000</field></shadow>`
+                            },
+                            fields: {},
+                            field_constraints: {},
+                            field_extra_attr: {},
+                            mutation: '',
+                            is_output: true,
+                            parent_id: blockId
+                        };
+
+                        kittenBlocks[randAYId] = {
+                            type: 'math_number',
+                            id: randAYId,
+                            comment: null,
+                            is_shadow: true,
+                            collapsed: false,
+                            disabled: false,
+                            deletable: true,
+                            movable: true,
+                            editable: true,
+                            visible: 'visible',
+                            location: [0, 0],
+                            shadows: {},
+                            fields: { NUM: '-1000' },
+                            field_constraints: { NUM: { min: null, max: null, precision: 0, mod: null } },
+                            field_extra_attr: {},
+                            mutation: '',
+                            is_output: true,
+                            parent_id: randomYBlockId
+                        };
+                        kittenBlocks[randBYId] = {
+                            type: 'math_number',
+                            id: randBYId,
+                            comment: null,
+                            is_shadow: true,
+                            collapsed: false,
+                            disabled: false,
+                            deletable: true,
+                            movable: true,
+                            editable: true,
+                            visible: 'visible',
+                            location: [0, 0],
+                            shadows: {},
+                            fields: { NUM: '1000' },
+                            field_constraints: { NUM: { min: null, max: null, precision: 0, mod: null } },
+                            field_extra_attr: {},
+                            mutation: '',
+                            is_output: true,
+                            parent_id: randomYBlockId
+                        };
+                        kittenBlocks[randomYBlockId] = {
+                            type: 'random',
+                            id: randomYBlockId,
+                            comment: null,
+                            is_shadow: true,
+                            collapsed: false,
+                            disabled: false,
+                            deletable: true,
+                            movable: true,
+                            editable: true,
+                            visible: 'visible',
+                            location: [0, 0],
+                            shadows: {
+                                a: `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${randAYId}" visible="visible"><field constraints="-Infinity,Infinity,0," name="NUM">-1000</field></shadow>`,
+                                b: `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${randBYId}" visible="visible"><field constraints="-Infinity,Infinity,0," name="NUM">1000</field></shadow>`
+                            },
+                            fields: {},
+                            field_constraints: {},
+                            field_extra_attr: {},
+                            mutation: '',
+                            is_output: true,
+                            parent_id: blockId
+                        };
+
+                        const timeShadowId = `shadow_time_${shadowBlockCounter++}`;
+                        kittenBlocks[timeShadowId] = {
+                            type: 'math_number',
+                            id: timeShadowId,
+                            comment: null,
+                            is_shadow: true,
+                            collapsed: false,
+                            disabled: false,
+                            deletable: true,
+                            movable: true,
+                            editable: true,
+                            visible: 'visible',
+                            location: [0, 0],
+                            shadows: {},
+                            fields: { NUM: '1' },
+                            field_constraints: { NUM: { min: 0, max: null, precision: 0, mod: null } },
+                            field_extra_attr: {},
+                            mutation: '',
+                            is_output: true,
+                            parent_id: blockId
+                        };
+
+                        kittenBlock.shadows['time'] = `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${timeShadowId}" visible="visible"><field constraints="0,Infinity,0," name="NUM">1</field></shadow>`;
+                        kittenBlock.shadows['x'] = `<shadow xmlns="http://www.w3.org/1999/xhtml" type="random" id="${randomXBlockId}" visible="visible"></shadow>`;
+                        kittenBlock.shadows['y'] = `<shadow xmlns="http://www.w3.org/1999/xhtml" type="random" id="${randomYBlockId}" visible="visible"></shadow>`;
+
+                        if (!kittenConnections[blockId]) kittenConnections[blockId] = {};
+                        kittenConnections[blockId][timeShadowId] = { type: 'input', input_type: 'value', input_name: 'time' };
+                        kittenConnections[blockId][randomXBlockId] = { type: 'input', input_type: 'value', input_name: 'x' };
+                        kittenConnections[blockId][randomYBlockId] = { type: 'input', input_type: 'value', input_name: 'y' };
+                    }
+                    
+                    if (!kittenBlock.shadows.time || !kittenBlock.shadows.x || !kittenBlock.shadows.y) {
+                        const timeShadowId = `shadow_time_${shadowBlockCounter++}`;
+                        const xShadowId = `shadow_x_${shadowBlockCounter++}`;
+                        const yShadowId = `shadow_y_${shadowBlockCounter++}`;
+                        
+                        kittenBlocks[timeShadowId] = {
+                            type: 'math_number',
+                            id: timeShadowId,
+                            comment: null,
+                            is_shadow: true,
+                            collapsed: false,
+                            disabled: false,
+                            deletable: true,
+                            movable: true,
+                            editable: true,
+                            visible: 'visible',
+                            location: [0, 0],
+                            shadows: {},
+                            fields: { NUM: '1' },
+                            field_constraints: { NUM: { min: 0, max: null, precision: 0, mod: null } },
+                            field_extra_attr: {},
+                            mutation: '',
+                            is_output: true,
+                            parent_id: blockId
+                        };
+                        kittenBlocks[xShadowId] = {
+                            type: 'math_number',
+                            id: xShadowId,
+                            comment: null,
+                            is_shadow: true,
+                            collapsed: false,
+                            disabled: false,
+                            deletable: true,
+                            movable: true,
+                            editable: true,
+                            visible: 'visible',
+                            location: [0, 0],
+                            shadows: {},
+                            fields: { NUM: '0' },
+                            field_constraints: { NUM: { min: null, max: null, precision: 0, mod: null } },
+                            field_extra_attr: {},
+                            mutation: '',
+                            is_output: true,
+                            parent_id: blockId
+                        };
+                        kittenBlocks[yShadowId] = {
+                            type: 'math_number',
+                            id: yShadowId,
+                            comment: null,
+                            is_shadow: true,
+                            collapsed: false,
+                            disabled: false,
+                            deletable: true,
+                            movable: true,
+                            editable: true,
+                            visible: 'visible',
+                            location: [0, 0],
+                            shadows: {},
+                            fields: { NUM: '0' },
+                            field_constraints: { NUM: { min: null, max: null, precision: 0, mod: null } },
+                            field_extra_attr: {},
+                            mutation: '',
+                            is_output: true,
+                            parent_id: blockId
+                        };
+
+                        kittenBlock.shadows['time'] = `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${timeShadowId}" visible="visible"><field constraints="0,Infinity,0," name="NUM">1</field></shadow>`;
+                        kittenBlock.shadows['x'] = `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${xShadowId}" visible="visible"><field constraints="-Infinity,Infinity,0," name="NUM">0</field></shadow>`;
+                        kittenBlock.shadows['y'] = `<shadow xmlns="http://www.w3.org/1999/xhtml" type="math_number" id="${yShadowId}" visible="visible"><field constraints="-Infinity,Infinity,0," name="NUM">0</field></shadow>`;
+
+                        if (!kittenConnections[blockId]) kittenConnections[blockId] = {};
+                        kittenConnections[blockId][timeShadowId] = { type: 'input', input_type: 'value', input_name: 'time' };
+                        kittenConnections[blockId][xShadowId] = { type: 'input', input_type: 'value', input_name: 'x' };
+                        kittenConnections[blockId][yShadowId] = { type: 'input', input_type: 'value', input_name: 'y' };
                     }
                 }
 
@@ -1125,7 +1220,7 @@ class MenuBar extends React.Component {
                             if (isMotionGoto || isMotionPointTowards) {
                                 continue;
                             }
-                            if (isMotionGlideto) {
+                            if (isMotionGlideto && inputKey === 'TO') {
                                 continue;
                             }
 

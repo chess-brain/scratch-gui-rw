@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, {useState, useEffect, useMemo} from 'react';
-import {defineMessages, injectIntl, intlShape, FormattedMessage} from 'react-intl';
+import ReactDOM from 'react-dom';
+import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import {Search, Heart, Download, ExternalLink} from 'lucide-react';
 
 import Modal from '../../containers/windowed-modal.jsx';
@@ -11,134 +12,119 @@ import styles from './bilme-modal.css';
 
 const messages = defineMessages({
     title: {
-        defaultMessage: 'Bilme Marketplace',
-        description: 'Title of the Bilme marketplace modal',
-        id: 'bl.bilme.title'
+        defaultMessage: 'WarpTheme Store',
+        description: 'Title of the WarpTheme store modal',
+        id: 'bl.warptheme.title'
     },
     searchPlaceholder: {
         defaultMessage: 'Search themes...',
         description: 'Placeholder text for search input',
-        id: 'bl.bilme.searchPlaceholder'
-    },
-    sortBy: {
-        defaultMessage: 'Sort by',
-        description: 'Label for sort dropdown',
-        id: 'bl.bilme.sortBy'
+        id: 'bl.warptheme.searchPlaceholder'
     },
     newest: {
         defaultMessage: 'Newest',
         description: 'Sort option for newest themes',
-        id: 'bl.bilme.newest'
+        id: 'bl.warptheme.newest'
     },
     likes: {
         defaultMessage: 'Most Liked',
         description: 'Sort option for most liked themes',
-        id: 'bl.bilme.likes'
+        id: 'bl.warptheme.likes'
     },
     name: {
         defaultMessage: 'Name',
         description: 'Sort option for alphabetical by name',
-        id: 'bl.bilme.name'
+        id: 'bl.warptheme.name'
     },
     allPlatforms: {
         defaultMessage: 'All Platforms',
         description: 'Filter option for all platforms',
-        id: 'bl.bilme.allPlatforms'
+        id: 'bl.warptheme.allPlatforms'
     },
     RemixWarp: {
         defaultMessage: 'RemixWarp',
         description: 'Platform filter for RemixWarp',
-        id: 'bl.bilme.RemixWarp'
+        id: 'bl.warptheme.RemixWarp'
     },
     allColors: {
         defaultMessage: 'All Colors',
         description: 'Filter option for all colors',
-        id: 'bl.bilme.allColors'
+        id: 'bl.warptheme.allColors'
     },
     red: {
         defaultMessage: 'Red',
         description: 'Color filter for red',
-        id: 'bl.bilme.red'
+        id: 'bl.warptheme.red'
     },
     orange: {
         defaultMessage: 'Orange',
         description: 'Color filter for orange',
-        id: 'bl.bilme.orange'
+        id: 'bl.warptheme.orange'
     },
     yellow: {
         defaultMessage: 'Yellow',
         description: 'Color filter for yellow',
-        id: 'bl.bilme.yellow'
+        id: 'bl.warptheme.yellow'
     },
     green: {
         defaultMessage: 'Green',
         description: 'Color filter for green',
-        id: 'bl.bilme.green'
+        id: 'bl.warptheme.green'
     },
     blue: {
         defaultMessage: 'Blue',
         description: 'Color filter for blue',
-        id: 'bl.bilme.blue'
+        id: 'bl.warptheme.blue'
     },
     purple: {
         defaultMessage: 'Purple',
         description: 'Color filter for purple',
-        id: 'bl.bilme.purple'
-    },
-    login: {
-        defaultMessage: 'Sign In',
-        description: 'Button to sign in',
-        id: 'bl.bilme.login'
-    },
-    logout: {
-        defaultMessage: 'Sign Out',
-        description: 'Button to sign out',
-        id: 'bl.bilme.logout'
+        id: 'bl.warptheme.purple'
     },
     createTheme: {
         defaultMessage: 'Create Theme',
         description: 'Button to create a new theme',
-        id: 'bl.bilme.createTheme'
+        id: 'bl.warptheme.createTheme'
     },
     noThemes: {
         defaultMessage: 'No themes found',
         description: 'Message shown when no themes match filters',
-        id: 'bl.bilme.noThemes'
+        id: 'bl.warptheme.noThemes'
     },
     loading: {
         defaultMessage: 'Loading themes...',
         description: 'Loading message',
-        id: 'bl.bilme.loading'
+        id: 'bl.warptheme.loading'
     },
     error: {
         defaultMessage: 'Failed to load themes',
         description: 'Error message when themes fail to load',
-        id: 'bl.bilme.error'
+        id: 'bl.warptheme.error'
     },
     likesCount: {
         defaultMessage: '{count} likes',
         description: 'Label for like count',
-        id: 'bl.bilme.likesCount'
+        id: 'bl.warptheme.likesCount'
     },
     downloadsCount: {
         defaultMessage: '{count} downloads',
         description: 'Label for download count',
-        id: 'bl.bilme.downloadsCount'
+        id: 'bl.warptheme.downloadsCount'
     },
     applyTheme: {
         defaultMessage: 'Apply',
         description: 'Button to apply a theme',
-        id: 'bl.bilme.applyTheme'
+        id: 'bl.warptheme.applyTheme'
     },
     downloadTheme: {
         defaultMessage: 'Download Theme',
         description: 'Button to download a theme',
-        id: 'bl.bilme.downloadTheme'
+        id: 'bl.warptheme.downloadTheme'
     },
-    openInBilme: {
-        defaultMessage: 'Open in Bilme',
-        description: 'Button to open theme in Bilme website',
-        id: 'bl.bilme.openInBilme'
+    openInWarpTheme: {
+        defaultMessage: 'Open in WarpTheme',
+        description: 'Button to open theme in WarpTheme website',
+        id: 'bl.warptheme.openInWarpTheme'
     }
 });
 
@@ -157,7 +143,6 @@ const PLATFORMS = [
     {id: 'RemixWarp', label: 'RemixWarp'},
 ];
 
-// Helper functions for color analysis
 const hexToRgb = hex => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
@@ -215,7 +200,6 @@ const colorMatchesCategory = (hexColor, category) => {
     const saturation = rgbToSaturation(rgb.r, rgb.g, rgb.b);
     const lightness = rgbToLightness(rgb.r, rgb.g, rgb.b);
     
-    // Skip very dark or very light/unsaturated colors
     if (lightness < 0.15 || lightness > 0.95 || saturation < 0.1) {
         return false;
     }
@@ -260,7 +244,39 @@ const themeHasColor = (theme, colorName) => {
     return false;
 };
 
-const BilmeModal = props => {
+const getGradientStyle = theme => {
+    if (!theme || !theme.colors) {
+        return {background: '#808080'};
+    }
+    
+    try {
+        if (theme.colors.gradient && Array.isArray(theme.colors.gradient)) {
+            const gradient = theme.colors.gradient;
+            const stops = gradient.map((stop, index) => {
+                const position = index / (gradient.length - 1) * 100;
+                return `${stop.color} ${position}%`;
+            }).join(', ');
+            return {
+                background: `linear-gradient(to right, ${stops})`
+            };
+        } else if (theme.colors.accent && theme.colors.accent.colors && Array.isArray(theme.colors.accent.colors)) {
+            const colors = theme.colors.accent.colors;
+            const stops = colors.map((stop, index) => {
+                const position = index / (colors.length - 1) * 100;
+                return `${stop.color} ${position}%`;
+            }).join(', ');
+            return {
+                background: `linear-gradient(to right, ${stops})`
+            };
+        }
+    } catch (e) {
+        console.debug('Failed to get gradient style:', e);
+    }
+    
+    return {background: '#808080'};
+};
+
+const WarpthemeModal = props => {
     const [themes, setThemes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -268,15 +284,14 @@ const BilmeModal = props => {
     const [sortBy, setSortBy] = useState('newest');
     const [platformFilter, setPlatformFilter] = useState('all');
     const [colorFilter, setColorFilter] = useState('all');
-    const [popupPosition, setPopupPosition] = useState({top: 0, left: 0, visible: false, theme: null});
+    const [popupPosition, setPopupPosition] = useState({top: 0, left: 0, visible: false, theme: null, isDarkTheme: false});
 
-    // Fetch themes from Bilme API
     useEffect(() => {
         const fetchThemes = async () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch('https://theme.bilup.org/api/themes');
+                const response = await fetch('https://warptheme.mistium.com/api/themes');
                 if (!response.ok) throw new Error('Failed to fetch themes');
                 const data = await response.json();
                 setThemes(data.themes || []);
@@ -291,11 +306,9 @@ const BilmeModal = props => {
         fetchThemes();
     }, []);
 
-    // Filter and sort themes
     const filteredThemes = useMemo(() => {
         let result = [...themes];
         
-        // Filter by search query
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             result = result.filter(theme =>
@@ -305,17 +318,14 @@ const BilmeModal = props => {
             );
         }
         
-        // Filter by platform
         if (platformFilter !== 'all') {
             result = result.filter(theme => theme.platform === platformFilter);
         }
         
-        // Filter by color
         if (colorFilter !== 'all') {
             result = result.filter(theme => themeHasColor(theme, colorFilter));
         }
         
-        // Sort
         result.sort((a, b) => {
             switch (sortBy) {
             case 'likes':
@@ -332,18 +342,18 @@ const BilmeModal = props => {
     }, [themes, searchQuery, platformFilter, colorFilter, sortBy]);
 
     const handleCreateTheme = () => {
-        window.open('https://theme.bilup.org', '_blank');
+        window.open('https://warptheme.mistium.com', '_blank');
     };
 
-    const handleOpenInBilme = theme => {
+    const handleOpenInWarpTheme = theme => {
         const slug = theme.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-        window.open(`https://theme.bilup.org/themes/${theme.author}/${slug}`, '_blank');
+        window.open(`https://warptheme.mistium.com/themes/${theme.author}/${slug}`, '_blank');
     };
 
     const handleDownloadTheme = async theme => {
         try {
             const response = await fetch(
-                `https://theme.bilup.org/api/theme/export?uuid=${theme.uuid}&platform=bilup`
+                `https://warptheme.mistium.com/api/theme/export?uuid=${theme.uuid}&platform=remixwarp`
             );
             
             if (!response.ok) {
@@ -352,138 +362,74 @@ const BilmeModal = props => {
             
             const themeData = await response.json();
             
-            // 设置必要的默认值
             if (!themeData.name) {
                 themeData.name = theme.name;
             }
-            if (!themeData.gui) {
-                themeData.gui = 'light';
-            }
-            if (!themeData.blocks) {
-                themeData.blocks = 'three';
+            if (!themeData.author) {
+                themeData.author = theme.author;
             }
             
-            // 创建下载链接
-            const blob = new Blob([JSON.stringify(themeData, null, 2)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(themeData, null, 2)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${theme.name.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}.json`;
+            a.download = `${theme.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.theme`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Error downloading theme:', error);
-            alert(`下载主题失败: ${error.message}`);
+        } catch (err) {
+            console.error('Error downloading theme:', err);
+            alert(props.intl.formatMessage({defaultMessage: 'Failed to download theme', id: 'bl.warptheme.downloadError'}));
         }
     };
 
-   
+    const handleApplyTheme = theme => {
+        if (isPixelTheme(theme.name)) {
+            props.onPixelThemeApply(theme);
+        } else {
+            props.onThemeApply(theme);
+        }
+    };
+
+    const isPixelTheme = themeName => {
+        const pixelKeywords = ['像素主题', '像素', 'RW', 'pixel', 'Pixel Theme'];
+        const lowerName = themeName.toLowerCase();
+        return pixelKeywords.some(keyword => lowerName.includes(keyword.toLowerCase()));
+    };
+
     const handleMouseEnter = (e, theme) => {
         const rect = e.currentTarget.getBoundingClientRect();
-        const popupWidth = 900;
-        const popupHeight = 24 * 4 + 4 * 3 + 8 * 2; // 4 segments * 24px + 3 gaps * 4px + 2 padding * 4px
+        const isDarkTheme = document.body.classList.contains('dark') || document.body.classList.contains('tw-dark');
         
-        let left = rect.left + rect.width / 2 - popupWidth / 2;
-        let top = rect.top - popupHeight - 8;
-        
-        // 确保弹出框在视口内
-        left = Math.max(10, Math.min(left, window.innerWidth - popupWidth - 10));
-        top = Math.max(10, top);
-        
-        // 判断是否是深色主题
-        const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark' || 
-                           document.documentElement.classList.contains('theme-dark');
-        
-        setPopupPosition({top, left, visible: true, theme, isDarkTheme});
+        setPopupPosition({
+            top: rect.top - 100,
+            left: rect.left + rect.width / 2 - 450,
+            visible: true,
+            theme: theme,
+            isDarkTheme: isDarkTheme
+        });
     };
 
     const handleMouseLeave = () => {
         setPopupPosition(prev => ({...prev, visible: false}));
     };
 
-    const handleApplyTheme = async theme => {
-        try {
-            console.log('Applying theme:', theme.name, 'UUID:', theme.uuid);
-            
-            // 检测是否为像素主题
-            if (isPixelTheme(theme.name)) {
-                console.log('Detected pixel theme, opening pixel editor');
-                if (props.onPixelThemeApply) {
-                    props.onPixelThemeApply(theme);
-                } else {
-                    console.error('[ERROR] onPixelThemeApply is not defined!');
-                    alert('像素主题导入功能不可用');
-                }
-                return;
-            }
-            
-            if (props.onThemeApply) {
-                
-                const response = await fetch(
-                    `https://theme.bilup.org/api/theme/export?uuid=${theme.uuid}&platform=bilup`
-                );
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Failed to fetch theme: ${response.status} ${response.statusText} - ${errorText}`);
-                }
-                
-                const themeData = await response.json();
-                console.log('Theme data received:', themeData);
-                
-                // 验证主题数据格式
-                if (!themeData || typeof themeData !== 'object') {
-                    throw new Error('Invalid theme data format');
-                }
-                
-                // 检查是否缺少必要属性，如果缺少则从原始主题数据中获取
-                if (!themeData.name) {
-                    themeData.name = theme.name;
-                    console.log('Added missing name from theme object');
-                }
-                
-                if (!themeData.gui) {
-                    themeData.gui = 'light'; // 默认使用 light GUI
-                    console.log('Added default gui: light');
-                }
-                
-                if (!themeData.blocks) {
-                    themeData.blocks = 'three'; // 默认使用 three blocks
-                    console.log('Added default blocks: three');
-                }
-                
-                console.log('Final theme data:', themeData);
-                
-                props.onThemeApply(themeData);
-            }
-        } catch (err) {
-            console.error('Error applying theme:', err);
-            console.error('Error stack:', err.stack);
-            // 显示错误提示
-            alert(`主题应用失败: ${err.message}`);
-        }
-    };
- const isPixelTheme = themeName => {
-        const pixelKeywords = ['像素主题', '像素', 'RW', 'pixel', 'Pixel Theme'];
-        const lowerName = themeName.toLowerCase();
-        return pixelKeywords.some(keyword => lowerName.includes(keyword.toLowerCase()));
-    };
-
     const getGradientStyle = theme => {
-        if (!theme.colors?.gradient) return {};
-    
-        // 检查是否为像素主题
+        if (!theme || !theme.colors) {
+            return {background: '#808080'};
+        }
+
+        if (!theme.colors.gradient) {
+            return {background: '#808080'};
+        }
+
         if (isPixelTheme(theme.name)) {
-            // 尝试从主题数据中提取像素数据
             let pixelData = null;
-            
-            // 检查是否有伪装的像素数据
+
             if (theme.colors.gradient && theme.colors.gradient.length > 0) {
                 const firstColor = theme.colors.gradient[0].color;
                 if (firstColor && typeof firstColor === 'string' && firstColor.startsWith('PIXEL:')) {
-                    // 解析像素数据
                     try {
                         const pixelString = firstColor.substring(6);
                         pixelData = pixelString.split(';').map(row => row.split(','));
@@ -492,21 +438,17 @@ const BilmeModal = props => {
                     }
                 }
             }
-            
-            // 如果有像素数据，生成像素预览
+
             if (pixelData && pixelData.length > 0) {
-                // 创建Canvas来生成预览图
                 const canvas = document.createElement('canvas');
-                // 预览图高度为24px（编辑器菜单栏高度），按比例计算宽度
                 const previewHeight = 24;
                 const scale = previewHeight / pixelData.length;
                 const previewWidth = Math.floor(pixelData[0].length * scale);
-                
+
                 canvas.width = previewWidth;
                 canvas.height = previewHeight;
                 const ctx = canvas.getContext('2d');
-                
-                // 绘制像素数据
+
                 for (let y = 0; y < pixelData.length; y++) {
                     for (let x = 0; x < pixelData[y].length; x++) {
                         const color = pixelData[y][x];
@@ -516,7 +458,7 @@ const BilmeModal = props => {
                         }
                     }
                 }
-                
+
                 return {
                     background: `url(${canvas.toDataURL('image/png')})`,
                     backgroundSize: 'auto 100%',
@@ -524,13 +466,12 @@ const BilmeModal = props => {
                     backgroundRepeat: 'repeat-x'
                 };
             }
-            
-            // 回退到简单的像素风格背景
+
             let primaryColor = '#ff6b6b';
             if (theme.colors.gradient && theme.colors.gradient.length > 0) {
                 primaryColor = theme.colors.gradient[0].color?.startsWith('PIXEL:') ? '#ff6b6b' : theme.colors.gradient[0].color;
             }
-            
+
             return {
                 background: `
                     repeating-linear-gradient(
@@ -551,28 +492,61 @@ const BilmeModal = props => {
                 backgroundSize: '8px 8px'
             };
         }
-    
-        const sortedColors = [...theme.colors.gradient].sort((a, b) => a.position - b.position);
-        const gradientStops = sortedColors.map(c => `${c.color} ${c.position}%`).join(', ');
-    
-        const direction = theme.colors.gradientDirection || 135;
-    
-        return {
-            background: `linear-gradient(${direction}deg, ${gradientStops})`
-        };
+
+        try {
+            if (theme.colors.gradient && Array.isArray(theme.colors.gradient)) {
+                const gradient = theme.colors.gradient;
+                const stops = gradient.map((stop, index) => {
+                    const position = index / (gradient.length - 1) * 100;
+                    return `${stop.color} ${position}%`;
+                }).join(', ');
+                return {
+                    background: `linear-gradient(to right, ${stops})`
+                };
+            } else if (theme.colors.accent && theme.colors.accent.colors && Array.isArray(theme.colors.accent.colors)) {
+                const colors = theme.colors.accent.colors;
+                const stops = colors.map((stop, index) => {
+                    const position = index / (colors.length - 1) * 100;
+                    return `${stop.color} ${position}%`;
+                }).join(', ');
+                return {
+                    background: `linear-gradient(to right, ${stops})`
+                };
+            }
+        } catch (e) {
+            console.debug('Failed to get gradient style:', e);
+        }
+
+        return {background: '#808080'};
     };
 
     return (
         <Modal
             className={styles.modalContent}
             contentLabel={props.intl.formatMessage(messages.title)}
-            id="bilmeModal"
+            id="warpthemeModal"
             fullScreen
             onRequestClose={props.onClose}
             visible={props.visible}
         >
             <Box className={styles.container}>
-                {/* Filters */}
+                <div className={styles.header}>
+                    <div className={styles.headerLeft}>
+                        <h2 className={styles.title}>
+                            {props.intl.formatMessage(messages.title)}
+                        </h2>
+                    </div>
+                    <div className={styles.headerRight}>
+                        <button
+                            className={styles.createBtn}
+                            onClick={handleCreateTheme}
+                            title={props.intl.formatMessage(messages.createTheme)}
+                        >
+                            {props.intl.formatMessage(messages.createTheme)}
+                        </button>
+                    </div>
+                </div>
+
                 <div className={styles.filters}>
                     <div className={styles.searchBox}>
                         <Search
@@ -644,108 +618,94 @@ const BilmeModal = props => {
                         <div className={styles.loadingContainer}>
                             <Spinner large />
                             <p className={styles.loadingText}>
-                                <FormattedMessage {...messages.loading} />
+                                {props.intl.formatMessage(messages.loading)}
                             </p>
                         </div>
                     ) : error ? (
                         <div className={styles.errorContainer}>
                             <p className={styles.errorText}>
-                                <FormattedMessage {...messages.error} />
+                                {props.intl.formatMessage(messages.error)}
                             </p>
+                            <p className={styles.errorDetails}>{error}</p>
                         </div>
                     ) : filteredThemes.length === 0 ? (
                         <div className={styles.noThemesContainer}>
                             <p className={styles.noThemesText}>
-                                <FormattedMessage {...messages.noThemes} />
+                                {props.intl.formatMessage(messages.noThemes)}
                             </p>
                         </div>
-                    ) : (
-                        filteredThemes.map(theme => (
+                    ) : filteredThemes.map(theme => (
                             <div
                                 key={theme.uuid}
                                 className={styles.themeCard}
-                                data-name={theme.name}
-                                data-platform={theme.platform}
                                 onMouseEnter={isPixelTheme(theme.name) ? e => handleMouseEnter(e, theme) : undefined}
                                 onMouseLeave={isPixelTheme(theme.name) ? handleMouseLeave : undefined}
                             >
-                                <div
-                                    className={styles.themeHeader}
-                                >
-                                    {/* 像素主题预览 */}
-                                    {isPixelTheme(theme.name) ? (
-                                        <div className={styles.pixelPreviewWrapper}>
-                                            <div 
-                                                className={styles.pixelPreview}
-                                                style={getGradientStyle(theme)}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div style={getGradientStyle(theme)} className={styles.gradientPreview} />
-                                    )}
-                                    
+                                <div className={styles.themeHeader}>
+                                    <div className={styles.gradientPreview} style={getGradientStyle(theme)} />
                                     {isPixelTheme(theme.name) && (
-                                        <div className={styles.pixelBadge}>
-                                            <svg t="1780839989942" className="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
-                                                <path d="M983.04 0H40.96A40.917333 40.917333 0 0 0 0 40.96v942.08a40.917333 40.917333 0 0 0 40.96 40.96h942.08a40.96 40.96 0 0 0 40.96-40.96V40.96a40.96 40.96 0 0 0-40.96-40.96z m-51.2 931.84H92.16V92.16h839.68v839.68z" fill="white" opacity="0.9"></path>
-                                                <path d="M512 151.552h367.018667v367.018667H512V151.552zM151.552 512h367.018667v367.018667H151.552V512z" fill="#ff6b6b"></path>
+                                        <div className={styles.pixelIcon}>
+                                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                                <rect x="3" y="3" width="6" height="6" rx="1"/>
+                                                <rect x="15" y="3" width="6" height="6" rx="1"/>
+                                                <rect x="3" y="15" width="6" height="6" rx="1"/>
+                                                <rect x="15" y="15" width="6" height="6" rx="1"/>
                                             </svg>
                                         </div>
                                     )}
                                 </div>
+                                
                                 <div className={styles.themeContent}>
-                                    <h3 className={styles.themeName}>{theme.name}</h3>
+                                    <h3 className={styles.themeName}>
+                                        {isPixelTheme(theme.name) && <span className={styles.pixelBadge}>[像素主题]</span>}
+                                        {theme.name}
+                                    </h3>
                                     <p className={styles.themeAuthor}>by {theme.authorName}</p>
-                                    {theme.description && (
-                                        <p className={styles.themeDescription}>{theme.description}</p>
-                                    )}
-                                    <div className={styles.themeStats}>
-                                        <div className={styles.stat}>
-                                            <Heart size={14} />
-                                            <span>{theme.likes}</span>
-                                        </div>
-                                        <div className={styles.stat}>
-                                            <Download size={14} />
-                                            <span>{theme.downloads}</span>
-                                        </div>
-                                    </div>
-                                    <div className={styles.themeActions}>
-                                        <button
-                                            className={styles.applyBtn}
-                                            onClick={() => handleApplyTheme(theme)}
-                                        >
-                                            <FormattedMessage {...messages.applyTheme} />
-                                        </button>
-                                        <button
-                                            className={styles.downloadBtn}
-                                            onClick={() => handleDownloadTheme(theme)}
-                                            title={props.intl.formatMessage(messages.downloadTheme)}
-                                        >
-                                            <Download size={14} />
-                                        </button>
-                                        <button
-                                            className={styles.openBtn}
-                                            onClick={() => handleOpenInBilme(theme)}
-                                        >
-                                            <ExternalLink size={14} />
-                                        </button>
-                                    </div>
+                                    <p className={styles.themeDescription}>{theme.description}</p>
+                                </div>
+                                
+                                <div className={styles.themeStats}>
+                                    <span className={styles.stat}>
+                                        <Heart size={14} />
+                                        <span>
+                                            {props.intl.formatMessage(messages.likesCount, {count: theme.likes})}
+                                        </span>
+                                    </span>
+                                    <span className={styles.stat}>
+                                        <Download size={14} />
+                                        <span>
+                                            {props.intl.formatMessage(messages.downloadsCount, {count: theme.downloads})}
+                                        </span>
+                                    </span>
+                                </div>
+                                
+                                <div className={styles.themeActions}>
+                                    <button
+                                        className={styles.applyBtn}
+                                        onClick={() => handleApplyTheme(theme)}
+                                    >
+                                        {props.intl.formatMessage(messages.applyTheme)}
+                                    </button>
+                                    <button
+                                        className={styles.downloadBtn}
+                                        onClick={() => handleDownloadTheme(theme)}
+                                        title={props.intl.formatMessage(messages.downloadTheme)}
+                                    >
+                                        <Download size={16} />
+                                    </button>
+                                    <button
+                                        className={styles.openBtn}
+                                        onClick={() => handleOpenInWarpTheme(theme)}
+                                        title={props.intl.formatMessage(messages.openInWarpTheme)}
+                                    >
+                                        <ExternalLink size={16} />
+                                    </button>
                                 </div>
                             </div>
-                        ))
-                    )}
+                        ))}
                 </div>
-                <button
-                    className={styles.floatingCreateBtn}
-                    onClick={handleCreateTheme}
-                    title={props.intl.formatMessage(messages.createTheme)}
-                >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                </button>
-                {popupPosition.visible && popupPosition.theme && (
+
+                {popupPosition.visible && popupPosition.theme && ReactDOM.createPortal(
                     <div 
                         className={styles.pixelPreviewPopup}
                         style={{
@@ -761,18 +721,19 @@ const BilmeModal = props => {
                         <div className={styles.previewSegment} style={getGradientStyle(popupPosition.theme)} />
                         <div className={styles.previewSegment} style={getGradientStyle(popupPosition.theme)} />
                         <div className={styles.previewSegment} style={getGradientStyle(popupPosition.theme)} />
-                    </div>
+                    </div>,
+                    document.body
                 )}
             </Box>
         </Modal>
     );
 };
 
-BilmeModal.propTypes = {
-    intl: intlShape,
+WarpthemeModal.propTypes = {
+    intl: intlShape.isRequired,
     onClose: PropTypes.func.isRequired,
-    onThemeApply: PropTypes.func,
+    onThemeApply: PropTypes.func.isRequired,
     visible: PropTypes.bool
 };
 
-export default injectIntl(BilmeModal);
+export default injectIntl(WarpthemeModal);

@@ -30,6 +30,7 @@ const MODAL_AI_AGENT = 'aiAgentModal';
 const MODAL_BAIDU_AI = 'baiduAIModal';
 const MODAL_EXTENSION_LOAD_CHOICE = 'extensionLoadChoiceModal';
 const MODAL_WARPTHEME = 'bilmeModal';
+const MODAL_WARPTHEME_STORE = 'warpthemeModal';
 const MODAL_EXTENSION_EDITOR = 'extensionEditorModal';
 const MODAL_SUPER_REFACTOR = 'superRefactorModal';
 
@@ -72,6 +73,7 @@ const initialState = {
     [MODAL_BAIDU_AI]: false,
     [MODAL_EXTENSION_LOAD_CHOICE]: false,
     [MODAL_WARPTHEME]: false,
+    [MODAL_WARPTHEME_STORE]: false,
     [MODAL_EXTENSION_EDITOR]: false,
     [MODAL_SUPER_REFACTOR]: false,
     [MODAL_TUTORIAL]: false,
@@ -327,6 +329,12 @@ const openBilmeModal = function () {
 const closeBilmeModal = function () {
     return closeModal(MODAL_WARPTHEME);
 };
+const openWarpthemeModal = function () {
+    return openModal(MODAL_WARPTHEME_STORE);
+};
+const closeWarpthemeModal = function () {
+    return closeModal(MODAL_WARPTHEME_STORE);
+};
 const openTutorialModal = function () {
     return openModal(MODAL_TUTORIAL);
 };
@@ -450,6 +458,8 @@ export {
     closeExtensionLoadChoiceModal,
     openBilmeModal,
     closeBilmeModal,
+    openWarpthemeModal,
+    closeWarpthemeModal,
     openTutorialModal,
     closeTutorialModal,
     openVideoModal,
@@ -472,6 +482,7 @@ export {
     closeCompatibilityModal,
     MODAL_GANDI_HELP,
     MODAL_WARPTHEME,
+    MODAL_WARPTHEME_STORE,
     MODAL_EXTENSION_EDITOR,
     MODAL_SUPER_REFACTOR,
     MODAL_BAIDU_AI,
