@@ -3,6 +3,10 @@ const manifest = {
     "editorOnly": true,
     "name": 'Bilup Nova',
     "description": 'An AI assistant for Bilup, based on Gandi IDE AI assistant addon.',
+    "tags": [
+    "recommended"
+    "new"
+    ],
     credits: [
         {
             name: '白猫@CCW',
@@ -20,10 +24,6 @@ const manifest = {
             name: 'RyaninCn11',
             link: 'https://github.com/RyaninCn11/'
         }
-    ],
-    "tags": [
-    "recommended"
-    "new"
     ],
     "enabledByDefault": true,
     "userscripts": [
