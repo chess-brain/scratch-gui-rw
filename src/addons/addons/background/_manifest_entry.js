@@ -1,6 +1,6 @@
 const manifest = {
-  "name": "background/name",
-  "description": "background/description",
+  "name": "Background",
+  "description": "Make your editor look brand new.",
   "editorOnly": false,
   "tags": [
     "editor",
@@ -10,7 +10,7 @@ const manifest = {
   "info": [
     {
       "type": "notice",
-      "text": "background/performance-warning",
+      "text": "This may reduce performance, and will override RemixWarp's original wallpaper settings.",
       "id": "reducePerformance"
     }
   ],
