@@ -1,5 +1,6 @@
 import alignLeftIcon from '../../components/menu-bar/tw-align-left.svg';
 import alignCenterIcon from '../../components/menu-bar/tw-align-center.svg';
+import alignRightIcon from '../../components/menu-bar/tw-align-right.svg';
 
 const MENUBAR_ALIGN = {
     left: {
@@ -13,6 +14,12 @@ const MENUBAR_ALIGN = {
         description: 'Label for center-aligned menu bar',
         id: 'tw.menuBar.align.center',
         icon: alignCenterIcon
+    },
+    right: {
+        defaultMessage: 'Right',
+        description: 'Label for right-aligned menu bar',
+        id: 'tw.menuBar.align.right',
+        icon: alignRightIcon
     }
 };
 const MENUBAR_ALIGN_DEFAULT = 'center';
