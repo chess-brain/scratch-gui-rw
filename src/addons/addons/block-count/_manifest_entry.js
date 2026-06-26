@@ -28,6 +28,24 @@ const manifest = {
       "type": "boolean",
       "default": false
     }
+      {
+      "name": "Show costume count in menu bar",
+      "id": "show_costume_count",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "name": "Show sound count in menu bar",
+      "id": "show_sound_count",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "name": "Hide block count in menu bar",
+      "id": "hide_block_count",
+      "type": "boolean",
+      "default": false
+    }
   ],
   "enabledByDefault": true
 };
