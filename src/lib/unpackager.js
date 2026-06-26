@@ -1,4 +1,4 @@
-import JSZip from '@02engine/jszip';
+import JSZip from 'jszip';
 
 const unzipOrNull = async binaryData => {
     try {
