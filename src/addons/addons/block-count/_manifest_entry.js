@@ -27,8 +27,8 @@ const manifest = {
       "id": "show_complexity_score",
       "type": "boolean",
       "default": false
-    }
-      {
+    },
+    {
       "name": "Show costume count in menu bar",
       "id": "show_costume_count",
       "type": "boolean",
