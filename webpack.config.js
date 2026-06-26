@@ -173,10 +173,6 @@ const base = {
             use: 'raw-loader'
         },
         {
-            test: /\.(frag|vert)$/,
-            use: 'raw-loader'
-        },
-        {
             test: /\.json$/,
             type: 'json'
         }]

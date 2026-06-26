@@ -18,7 +18,6 @@ import * as accentTY from './accent/ty';
 import * as accentTrans from './accent/trans';
 import * as accentGay from './accent/gay';
 import * as accentRotur from './accent/rotur';
-import * as accentPink from './accent/pink';
 import * as accentSunset from './accent/sunset';
 import * as accentOcean from './accent/ocean';
 import * as accentAurora from './accent/aurora';
@@ -146,12 +145,6 @@ const ACCENTS = [
         accent: accentRotur,
         description: 'Rotur accent color',
         id: 'tw.accent.rotur'
-    },
-    {
-        name: 'Pink',
-        accent: accentPink,
-        description: 'Pink accent color',
-        id: 'tw.accent.pink'
     },
     {
         name: 'Sunset',
