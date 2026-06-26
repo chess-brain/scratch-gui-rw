@@ -51,6 +51,7 @@ const manifest = {
           "tab_style": "RemixWarp (V2)"
         }
       }
+    },
     {
       "url": "icon-only.css",
       "if": {
