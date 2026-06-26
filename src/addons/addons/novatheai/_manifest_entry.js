@@ -2,7 +2,7 @@
 const manifest = {
     "editorOnly": true,
     "name": 'Bilup Nova',
-    "description": 'An AI assistant for Bilup, based on Gandi IDE AI assistant addon.',
+    "description": 'An AI assistant by Bilup, based on Gandi IDE AI assistant addon.',
     "tags": [
     "recommended"
     "new"
