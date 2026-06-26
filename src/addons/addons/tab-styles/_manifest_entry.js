@@ -21,7 +21,7 @@ const manifest = {
   "dynamicDisable": true,
   "userstyles": [
     {
-      "url": "RemixWarp.css",
+      "url": "remixwarp.css",
       "if": {
         "settings": {
           "tab_style": "RemixWarp"
@@ -41,14 +41,6 @@ const manifest = {
       "if": {
         "settings": {
           "tab_style": "scratchbox"
-        }
-      }
-    },
-    {
-      "url": "remixwarp.css",
-      "if": {
-        "settings": {
-          "tab_style": "remixwarp"
         }
       }
     },
