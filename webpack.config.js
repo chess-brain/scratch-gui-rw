@@ -26,7 +26,7 @@ const htmlWebpackPluginCommon = {
 };
 
 // When this changes, the path for all JS files will change, bypassing any HTTP caches
-const CACHE_EPOCH = 'gleba';
+const CACHE_EPOCH = 'gleba4';
 
 const base = {
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
@@ -58,6 +58,7 @@ const base = {
     },
     resolve: {
         symlinks: false,
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
         alias: {
             'react': require.resolve('react'),
             'react-dom': require.resolve('react-dom'),
@@ -66,26 +67,42 @@ const base = {
             'exports-loader': require.resolve('exports-loader')
         }
     },
+    node: {
+        __dirname: false,
+        __filename: false
+    },
     module: {
         rules: [{
-            test: /\.jsx?$/,
+            test: /\.(jsx?|tsx?)$/,
             loader: 'babel-loader',
             include: [
                 path.resolve(__dirname, 'src'),
                 /node_modules[\\/]scratch-[^\\/]+[\\/]src/,
                 /node_modules[\\/]pify/,
                 /node_modules[\\/]@vernier[\\/]godirect/,
-                /node_modules[\\/]@chenglou[\\/]pretext/
+                /node_modules[\\/]domelementtype/,
+                /node_modules[\\/]domutils/,
+                /node_modules[\\/]react-markdown/,
+                /node_modules[\\/]isomorphic-git/
             ],
             options: {
+                cacheDirectory: true,
                 // Explicitly disable babelrc so we don't catch various config
                 // in much lower dependencies.
                 babelrc: false,
                 plugins: [
                     ['react-intl', {
                         messagesDir: './translations/messages/'
-                    }]],
-                presets: ['@babel/preset-env', '@babel/preset-react']
+                    }]
+                ],
+                presets: [
+                    ['@babel/preset-env', {
+                        bugfixes: true,
+                        browserslistEnv: 'production'
+                    }],
+                    '@babel/preset-react',
+                    '@babel/preset-typescript'
+                ]
             }
         },
         {
@@ -115,6 +132,34 @@ const base = {
             }]
         },
         {
+            test: /\.less$/,
+            use: [{
+                loader: 'style-loader'
+            }, {
+                loader: 'css-loader',
+                options: {
+                    modules: true,
+                    importLoaders: 2,
+                    localIdentName: '[name]_[local]_[hash:base64:5]',
+                    camelCase: true
+                }
+            }, {
+                loader: 'postcss-loader',
+                options: {
+                    ident: 'postcss',
+                    plugins: function () {
+                        return [
+                            postcssImport,
+                            postcssVars,
+                            autoprefixer
+                        ];
+                    }
+                }
+            }, {
+                loader: 'less-loader'
+            }]
+        },
+        {
             test: /\.hex$/,
             use: [{
                 loader: 'url-loader',
@@ -122,6 +167,14 @@ const base = {
                     limit: 16 * 1024
                 }
             }]
+        },
+        {
+            test: /\.raw\.(js|jsx|json|md)$/,
+            use: 'raw-loader'
+        },
+        {
+            test: /\.json$/,
+            type: 'json'
         }]
     },
     plugins: [
@@ -139,11 +192,18 @@ const base = {
                     from: 'src/lib/themes/blocks/high-contrast-media/blocks-media',
                     to: 'static/blocks-media/high-contrast',
                     force: true
+                },
+                {
+                    from: 'src/addons/addons-l10n',
+                    to: 'addons-l10n'
                 }
             ]
         })
-    ]
-};
+    ],
+    externals: {
+        'electron': 'commonjs electron'
+    }
+}
 
 if (!process.env.CI) {
     base.plugins.push(new webpack.ProgressPlugin());
@@ -181,8 +241,43 @@ module.exports = [
                 chunks: 'all',
                 minChunks: 2,
                 minSize: 50000,
-                maxInitialRequests: 5
-            }
+                maxInitialRequests: 5,
+                cacheGroups: {
+                    vendors: {
+                        test: /[\\/]node_modules[\\/]/,
+                        name: 'vendors',
+                        chunks: 'initial',
+                        priority: -10
+                    },
+                    common: {
+                        name: 'common',
+                        minChunks: 2,
+                        chunks: 'all',
+                        priority: -20,
+                        reuseExistingChunk: true
+                    }
+                }
+            },
+            runtimeChunk: 'single',
+            minimize: process.env.NODE_ENV === 'production',
+            minimizer: process.env.NODE_ENV === 'production' ? [
+                new require('terser-webpack-plugin')({
+                    terserOptions: {
+                        compress: {
+                            drop_console: true,
+                            drop_debugger: true,
+                            dead_code: true,
+                            unused: true,
+                            if_return: true,
+                            join_vars: true
+                        },
+                        output: {
+                            comments: false,
+                            beautify: false
+                        }
+                    }
+                })
+            ] : []
         },
         plugins: base.plugins.concat([
             new webpack.DefinePlugin({
@@ -190,13 +285,15 @@ module.exports = [
                 'process.env.DEBUG': Boolean(process.env.DEBUG),
                 'process.env.ENABLE_SERVICE_WORKER': JSON.stringify(process.env.ENABLE_SERVICE_WORKER || ''),
                 'process.env.ROOT': JSON.stringify(root),
-                'process.env.ROUTING_STYLE': JSON.stringify(process.env.ROUTING_STYLE || 'filehash')
+                'process.env.ROUTING_STYLE': JSON.stringify(process.env.ROUTING_STYLE || 'filehash'),
+                'react-dom.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.DO_NOT_USE_THIS_YET': true
             }),
             new HtmlWebpackPlugin({
                 chunks: ['editor'],
                 template: 'src/playground/index.ejs',
                 filename: 'editor.html',
-                title: `${APP_NAME} - Enhance Your Scratch Experience`,
+                title: `${APP_NAME}-Editor`,
+                description: `Create, edit, and share projects with ${APP_NAME}'s powerful Scratch editor. Build games, animations, and interactive stories with advanced features and optimizations.`,
                 isEditor: true,
                 ...htmlWebpackPluginCommon
             }),
@@ -204,14 +301,14 @@ module.exports = [
                 chunks: ['player'],
                 template: 'src/playground/index.ejs',
                 filename: 'index.html',
-                title: `${APP_NAME} - Enhance Your Scratch Experience`,
+                title: `${APP_NAME} - Refactoring freedom`,
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({
                 chunks: ['fullscreen'],
                 template: 'src/playground/index.ejs',
                 filename: 'fullscreen.html',
-                title: `${APP_NAME} - Enhance Your Scratch Experience`,
+                title: `${APP_NAME} - Refactoring freedom`,
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({
@@ -249,6 +346,15 @@ module.exports = [
                         from: 'extensions/**',
                         to: 'static',
                         context: 'src/examples'
+                    }
+                ]
+            }),
+            new CopyWebpackPlugin({
+                patterns: [
+                    {
+                        from: 'asset',
+                        to: 'asset',
+                        noErrorOnMissing: true
                     }
                 ]
             })
@@ -304,6 +410,16 @@ module.exports = [
                             from: 'src/lib/libraries/*.json',
                             to: 'libraries',
                             flatten: true
+                        }
+                    ]
+                }),
+                // Copy local assets for library loading
+                new CopyWebpackPlugin({
+                    patterns: [
+                        {
+                            from: 'asset',
+                            to: 'asset',
+                            noErrorOnMissing: true
                         }
                     ]
                 })
