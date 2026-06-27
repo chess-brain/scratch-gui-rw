@@ -3,5 +3,5 @@ const guiColors = {
 };
 
 export {
-    guiColors,
+    guiColors as default
 };
