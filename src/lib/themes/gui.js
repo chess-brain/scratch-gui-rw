@@ -3,16 +3,22 @@
 // The GUI pulls from here, you only need to update this file to add a new GUI theme
 
 import * as guiLight from './gui/light';
+import * as guiModenWhite from './gui/modern_white';
 import * as guiDark from './gui/dark';
+import * as guiDeepDark  from './gui/deep_dark';
 import * as guiMidnight from './gui/midnight';
 
 const GUI_LIGHT = 'light';
+const GUI_MODENWHITE = 'modernwhite';
 const GUI_DARK = 'dark';
+const GUI_DEEPDARK = 'deepdark';
 const GUI_MIDNIGHT = 'midnight';
 
 const GUI_MAP = {
     [GUI_LIGHT]: guiLight,
+    [GUI_MODENWHITE]: guiModenwhite,
     [GUI_DARK]: guiDark,
+    [GUI_DEEPDARK]: guiDeepDark,
     [GUI_MIDNIGHT]: guiMidnight
 };
 const GUI_DEFAULT = GUI_LIGHT;
