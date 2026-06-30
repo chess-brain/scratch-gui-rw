@@ -249,7 +249,7 @@ const ACCENTS = [
     {
         name: 'OmniMAX Blue',
         accent: accentOmniBlue,
-        description: 'Default blue color',
+        description: 'OmniMAX Blue gradient',
         id: 'tw.accent.omniblue'
     }
 ];
