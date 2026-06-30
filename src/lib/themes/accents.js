@@ -26,7 +26,6 @@ import * as accentCherry from './accent/cherry';
 import * as accentSky from './accent/sky';
 import * as accentForest from './accent/forest';
 import * as accentCoral from './accent/coral';
-import * as accentAE from './accent/ae';
 import * as accentAstraEditor from './accent/astraeditor';
 import * as accent02 from './accent/02e';
 import * as accentCE from './accent/ce';
