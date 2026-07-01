@@ -89,7 +89,7 @@ const manifest = {
             "id": "scratchbox"
         },
         {
-            "name": "RemixWarp(V2)",
+            "name": "RemixWarp (V2)",
             "id": "remixwarp(v2)"
         }
       ],
