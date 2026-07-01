@@ -3,8 +3,8 @@
 // 部署 Worker 后，请把下面的 WORKER_URL 替换为你的 Worker 访问地址。
 // ============================================================================
 
-// TODO: 部署完成后替换为你的 Worker 地址
-const WORKER_URL = 'https://your-worker.your-subdomain.workers.dev';
+// Worker 代理地址（已部署）
+const WORKER_URL = 'https://aiapi.rewp.de5.net';
 
 // 浏览器侧携带的请求令牌，Worker 会校验该值；用于挡住非本站请求的简单滥用。
 // 真正的 API 密钥保存在 Worker 的环境变量中，不会出现在前端代码里。
