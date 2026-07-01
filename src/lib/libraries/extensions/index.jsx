@@ -61,6 +61,9 @@ export default [
                 defaultMessage="{APP_NAME} Blocks"
                 description="Name of the RemixWarp extension category"
                 id="tw.extension.remixWarp.name"
+                values={{
+                    APP_NAME
+                }}
             />
         ),
         extensionId: 'tw',
