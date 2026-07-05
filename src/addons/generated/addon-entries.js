@@ -97,6 +97,7 @@ export default {
   "coder-style": () => import(/* webpackChunkName: "addon-entry-coder-style" */ "../addons/coder-style/_runtime_entry.js"),
   "comment-vscode-sync": () => import(/* webpackChunkName: "addon-entry-comment-vscode-sync" */ "../addons/comment-vscode-sync/_runtime_entry.js"),
   "Terminal": () => import(/* webpackChunkName: "addon-entry-Terminal" */ "../addons/Terminal/_runtime_entry.js"),
+  "novatheai": () => import(/* webpackChunkName: "addon-entry-novatheai" */ "../addons/novatheai/_runtime_entry.js"),
   "astras-copilot": () => import(/* webpackChunkName: "addon-entry-astras-copilot" */ "../addons/astras-copilot/_runtime_entry.js"),
   "02agent": () => import(/* webpackChunkName: "addon-entry-02agent" */ "../addons/02agent/_runtime_entry.js"),
   "my-blocks-plus": () => import(/* webpackChunkName: "addon-entry-my-blocks-plus" */ "../addons/my-blocks-plus/_runtime_entry.js"),
@@ -104,7 +105,9 @@ export default {
   "batch-color-replace": () => import(/* webpackChunkName: "addon-entry-batch-color-replace" */ "../addons/batch-color-replace/_runtime_entry.js"),
   "simple-project-analyzer": () => import(/* webpackChunkName: "addon-entry-simple-project-analyzer" */ "../addons/simple-project-analyzer/_runtime_entry.js"),
   "todo-list": () => import(/* webpackChunkName: "addon-entry-todo-list" */ "../addons/todo-list/_runtime_entry.js"),
+  "todo": () => import(/* webpackChunkName: "addon-entry-todo" */ "../addons/todo/_runtime_entry.js"),
   "block-pins": () => import(/* webpackChunkName: "addon-entry-block-pins" */ "../addons/block-pins/_runtime_entry.js"),
   "tw-comment-markdown-editor": () => import(/* webpackChunkName: "addon-entry-tw-comment-markdown-editor" */ "../addons/tw-comment-markdown-editor/_runtime_entry.js"),
   "background": () => import(/* webpackChunkName: "addon-entry-background" */ "../addons/background/_runtime_entry.js"),
+  "santa": () => import(/* webpackChunkName: "addon-entry-santa" */ "../addons/santa/_runtime_entry.js"),
 };
