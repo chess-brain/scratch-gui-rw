@@ -693,7 +693,47 @@ class Blocks extends React.Component {
             );
         }
 
+        this._showGravityEngineLabel();
         this._triggerVisibleBlocksGravity();
+    }
+
+    _showGravityEngineLabel () {
+        if (!this.blocks) return;
+
+        const flyoutSvg = this.blocks.querySelector('.blocklyFlyout');
+        if (!flyoutSvg) return;
+
+        const parent = flyoutSvg.parentElement;
+        if (!parent) return;
+
+        const label = document.createElement('div');
+        label.className = 'gravity-engine-label';
+        label.textContent = '重力引擎';
+        label.style.cssText = [
+            'position: absolute',
+            'top: 10px',
+            'left: 50%',
+            'transform: translateX(-50%)',
+            'padding: 8px 20px',
+            'background: linear-gradient(135deg, #ff6b6b, #feca57)',
+            'color: white',
+            'font-weight: bold',
+            'font-size: 16px',
+            'border-radius: 20px',
+            'z-index: 1000',
+            'box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4)',
+            'pointer-events: none',
+            'opacity: 0',
+            'transition: opacity 0.3s ease'
+        ].join(';');
+
+        parent.style.position = 'relative';
+        parent.appendChild(label);
+        this._gravityEngineLabel = label;
+
+        requestAnimationFrame(() => {
+            label.style.opacity = '1';
+        });
     }
 
     _triggerVisibleBlocksGravity () {
@@ -823,6 +863,11 @@ class Blocks extends React.Component {
         this._gravityEggAnimationFrames = [];
 
         this._gravityEggFallenBlocks.clear();
+
+        if (this._gravityEngineLabel && this._gravityEngineLabel.parentNode) {
+            this._gravityEngineLabel.parentNode.removeChild(this._gravityEngineLabel);
+            this._gravityEngineLabel = null;
+        }
     }
 
     handlePaletteHoverEnter () {
