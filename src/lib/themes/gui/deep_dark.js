@@ -1,3 +1,9 @@
+const name = {
+    defaultMessage: 'Deep Dark',
+    description: 'Label for the deep dark GUI theme',
+    id: 'tw.theme.gui.deepdark'
+};
+
 const guiColors = {
     "color-scheme": "dark",
 
@@ -75,6 +81,7 @@ const blockColors = {
 };
 
 export {
+    name,
     guiColors,
     blockColors
 };

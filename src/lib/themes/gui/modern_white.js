@@ -1,3 +1,9 @@
+const name = {
+    defaultMessage: 'Modern White',
+    description: 'Label for the modern white GUI theme',
+    id: 'tw.theme.gui.modernwhite'
+};
+
 const guiColors = {
     "color-scheme": "light",
     "ui-primary":
@@ -109,6 +115,7 @@ const guiColors = {
 const blockColors = {};
 
 export {
+    name,
     guiColors,
     blockColors
 };

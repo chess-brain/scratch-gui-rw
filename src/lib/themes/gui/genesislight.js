@@ -1,3 +1,9 @@
+const name = {
+    defaultMessage: 'Genesis Light',
+    description: 'Label for the genesis light GUI theme',
+    id: 'tw.theme.gui.genesis light'
+};
+
 const guiColors = {
     'color-scheme': 'light',
 
@@ -98,6 +104,7 @@ const guiColors = {
 const blockColors = {};
 
 export {
+    name,
     guiColors,
     blockColors
 };
