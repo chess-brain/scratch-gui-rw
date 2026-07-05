@@ -778,9 +778,12 @@ class Blocks extends React.Component {
             );
         }
 
-        this._showGravityEngineLabel();
-        this._setupFlyoutObserver();
-        this._triggerVisibleBlocksGravity();
+        // 延迟显示标签，等搜索结果渲染完成后再插入
+        setTimeout(() => {
+            this._showGravityEngineLabel();
+            this._setupFlyoutObserver();
+            this._triggerVisibleBlocksGravity();
+        }, 500);
     }
 
     _setupFlyoutObserver () {
@@ -793,7 +796,11 @@ class Blocks extends React.Component {
         this._gravityEggFlyoutObserver = new MutationObserver(() => {
             const hasGravityItem = svgGroup.querySelector('.gravity-engine-item');
             if (!hasGravityItem) {
-                this._showGravityEngineLabel();
+                // 延迟重新插入，避免在 flyout 渲染过程中被反复清除
+                if (this._gravityEggReinsertTimer) clearTimeout(this._gravityEggReinsertTimer);
+                this._gravityEggReinsertTimer = setTimeout(() => {
+                    this._showGravityEngineLabel();
+                }, 200);
             }
         });
 
@@ -854,13 +861,13 @@ class Blocks extends React.Component {
             'stop'
         );
         stop1.setAttribute('offset', '0%');
-        stop1.setAttribute('stop-color', '#ff6b6b');
+        stop1.setAttribute('stop-color', '#4a90d9');
         const stop2 = document.createElementNS(
             'http://www.w3.org/2000/svg',
             'stop'
         );
         stop2.setAttribute('offset', '100%');
-        stop2.setAttribute('stop-color', '#feca57');
+        stop2.setAttribute('stop-color', '#357abd');
         gradient.appendChild(stop1);
         gradient.appendChild(stop2);
         defs.appendChild(gradient);
@@ -1010,6 +1017,11 @@ class Blocks extends React.Component {
         if (this._gravityEggScrollTimeout) {
             clearTimeout(this._gravityEggScrollTimeout);
             this._gravityEggScrollTimeout = null;
+        }
+
+        if (this._gravityEggReinsertTimer) {
+            clearTimeout(this._gravityEggReinsertTimer);
+            this._gravityEggReinsertTimer = null;
         }
 
         this._gravityEggAnimationFrames.forEach(id => {
