@@ -29,5 +29,5 @@ const manifest = {
     "userscripts": [
     {
       url: "userscript.js"
-    }
+    },
   ];
