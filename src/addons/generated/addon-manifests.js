@@ -95,6 +95,7 @@ import _window_theme from "../addons/window-theme/_manifest_entry.js";
 import _workspace_tabs from "../addons/workspace-tabs/_manifest_entry.js";
 import _coder_style from "../addons/coder-style/_manifest_entry.js";
 import _comment_vscode_sync from "../addons/comment-vscode-sync/_manifest_entry.js";
+import _novatheai from "../addons/novatheai/_manifest_entry.js";
 import _Terminal from "../addons/Terminal/_manifest_entry.js";
 import _astras_copilot from "../addons/astras-copilot/_manifest_entry.js";
 import _02agent from "../addons/02agent/_manifest_entry.js";
@@ -103,9 +104,11 @@ import _hide_menubar from "../addons/hide-menubar/_manifest_entry.js";
 import _batch_color_replace from "../addons/batch-color-replace/_manifest_entry.js";
 import _simple_project_analyzer from "../addons/simple-project-analyzer/_manifest_entry.js";
 import _todo_list from "../addons/todo-list/_manifest_entry.js";
+import _todo from "../addons/todo/_manifest_entry.js";
 import _block_pins from "../addons/block-pins/_manifest_entry.js";
 import _tw_comment_markdown_editor from "../addons/tw-comment-markdown-editor/_manifest_entry.js";
 import _background from "../addons/background/_manifest_entry.js";
+import _santa from "../addons/background/_manifest_entry.js";
 export default {
   "calculator": _calculator,
   "cat-blocks": _cat_blocks,
@@ -203,6 +206,7 @@ export default {
   "workspace-tabs": _workspace_tabs,
   "coder-style": _coder_style,
   "comment-vscode-sync": _comment_vscode_sync,
+  "novatheai": _novatheai,
   "Terminal": _Terminal,
   "astras-copilot": _astras_copilot,
   "02agent": _02agent,
@@ -211,7 +215,9 @@ export default {
   "batch-color-replace": _batch_color_replace,
   "simple-project-analyzer": _simple_project_analyzer,
   "todo-list": _todo_list,
+  "todo": _todo,
   "block-pins": _block_pins,
   "tw-comment-markdown-editor": _tw_comment_markdown_editor,
-  "background": _background
+  "background": _background,
+  "santa": _santa
 };
