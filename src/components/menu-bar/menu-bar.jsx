@@ -37,6 +37,8 @@ import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
 import TWNews from './tw-news.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
+import Achievements from '../achievements/achievements.jsx';
+import {unlockAchievement} from '../../lib/achievements.js';
 
 import TWDesktopSettings from './tw-desktop-settings.jsx';
 
@@ -298,6 +300,7 @@ class MenuBar extends React.Component {
         this.workspaceBookmarksProjectListener = null;
         this.autosaveCountdownInterval = null;
         this.undoRedoChangeListener = null;
+        this.undoTimes = [];
         bindAll(this, [
             'handleClickSeeInside',
             'handleClickNew',
@@ -359,6 +362,9 @@ class MenuBar extends React.Component {
         if (this.props.vm && this.props.vm.runtime) {
             this.workspaceBookmarksProjectListener = () => {
                 this.loadWorkspaceBookmarksFromProject();
+                if (new Date().getHours() < 4) {
+                    unlockAchievement('late-night-coding');
+                }
             };
             this.props.vm.runtime.on('PROJECT_LOADED', this.workspaceBookmarksProjectListener);
         }
@@ -1978,10 +1984,16 @@ class MenuBar extends React.Component {
     }
     handleClickSave () {
         this.props.onClickSave();
+        if (new Date().getHours() < 4) {
+            unlockAchievement('late-night-coding');
+        }
         this.props.onRequestCloseFile();
     }
     handleClickSaveAsCopy () {
         this.props.onClickSaveAsCopy();
+        if (new Date().getHours() < 4) {
+            unlockAchievement('late-night-coding');
+        }
         this.props.onRequestCloseFile();
     }
     handleClickPackager () {
@@ -2093,6 +2105,9 @@ class MenuBar extends React.Component {
         if (modifier) {
             if (event.key.toLowerCase() === 's') {
                 this.props.handleSaveProject();
+                if (new Date().getHours() < 4) {
+                    unlockAchievement('late-night-coding');
+                }
                 event.preventDefault();
             } else if (event.key.toLowerCase() === 'o') {
                 event.preventDefault();
@@ -2472,6 +2487,9 @@ class MenuBar extends React.Component {
         return () => {
             this.props.onRequestCloseFile();
             downloadProjectCallback();
+            if (new Date().getHours() < 4) {
+                unlockAchievement('late-night-coding');
+            }
             if (this.props.onProjectTelemetryEvent) {
                 const metadata = collectMetadata(this.props.vm, this.props.projectTitle, this.props.locale);
                 this.props.onProjectTelemetryEvent('projectDidSave', metadata);
@@ -2880,6 +2898,12 @@ class MenuBar extends React.Component {
                 const workspace = ScratchBlocks.getMainWorkspace();
                 if (workspace) {
                     workspace.undo(false);
+                    const now = Date.now();
+                    this.undoTimes = this.undoTimes.filter(time => now - time <= 3000);
+                    this.undoTimes.push(now);
+                    if (this.undoTimes.length >= 3) {
+                        unlockAchievement('use-draft');
+                    }
                     this.updateUndoRedoState();
                 }
             });
@@ -3924,6 +3948,7 @@ class MenuBar extends React.Component {
                 </div>
 
                 <div className={styles.accountInfoGroup}>
+                    <Achievements inMenu />
                     <TWSaveStatus
                         showSaveFilePicker={this.props.showSaveFilePicker}
                     />
