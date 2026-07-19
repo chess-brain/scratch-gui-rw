@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import classNames from 'classnames';
 import Draggable from 'react-draggable';
 import {
     ACHIEVEMENTS,
@@ -11,12 +12,19 @@ import {
 } from '../../lib/achievements.js';
 import styles from './achievements.css';
 
+const ALL_CATEGORIES = '全部';
+const ACHIEVEMENT_CATEGORIES = [
+    ALL_CATEGORIES,
+    ...Array.from(new Set(ACHIEVEMENTS.map(achievement => achievement.type)))
+];
+
 const Achievements = () => {
     const [unlockedIds, setUnlockedIds] = useState(() => getUnlockedAchievementIds());
     const [notice, setNotice] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [experience, setExperience] = useState(() => getAchievementExperience());
     const [enabled, setEnabled] = useState(() => isAchievementsEnabled());
+    const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES);
 
     useEffect(() => {
         const handleUnlock = event => {
@@ -57,6 +65,16 @@ const Achievements = () => {
         selectAchievementExperience(selectedExperience);
         setExperience(selectedExperience);
         setEnabled(selectedExperience === 'sc-newbie');
+    };
+
+    const visibleAchievements = selectedCategory === ALL_CATEGORIES ?
+        ACHIEVEMENTS :
+        ACHIEVEMENTS.filter(achievement => achievement.type === selectedCategory);
+    const chooseCategory = event => {
+        const button = event.target.closest('button[data-achievement-category]');
+        if (button) {
+            setSelectedCategory(button.dataset.achievementCategory);
+        }
     };
 
     return (
@@ -111,8 +129,36 @@ const Achievements = () => {
                                 ×
                             </button>
                         </header>
+                        <nav
+                            aria-label="成就分类"
+                            className={styles.categories}
+                            onClick={chooseCategory}
+                        >
+                            {ACHIEVEMENT_CATEGORIES.map(category => {
+                                const isSelected = selectedCategory === category;
+                                const categoryAchievements = category === ALL_CATEGORIES ?
+                                    ACHIEVEMENTS :
+                                    ACHIEVEMENTS.filter(achievement => achievement.type === category);
+                                const unlockedCount = categoryAchievements.filter(achievement => (
+                                    unlockedIds.includes(achievement.id)
+                                )).length;
+                                return (
+                                    <button
+                                        aria-pressed={isSelected}
+                                        className={classNames({
+                                            [styles.categorySelected]: isSelected
+                                        })}
+                                        data-achievement-category={category}
+                                        key={category}
+                                        type="button"
+                                    >
+                                        {category} <span>{unlockedCount}/{categoryAchievements.length}</span>
+                                    </button>
+                                );
+                            })}
+                        </nav>
                         <div className={styles.list}>
-                            {ACHIEVEMENTS.map(achievement => {
+                            {visibleAchievements.map(achievement => {
                                 const unlocked = unlockedIds.includes(achievement.id);
                                 return (
                                     <article

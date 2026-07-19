@@ -142,6 +142,7 @@ import {
     downloadJsonObject,
     getDefaultWorkspaceBookmarksPayload,
     mergeWorkspaceBookmarksPayload,
+    normalizeWorkspaceBookmarkCategory,
     readWorkspaceBookmarksFromStage,
     writeWorkspaceBookmarksToStage
 } from '../../lib/mw/workspace-bookmarks.js';
@@ -2268,6 +2269,7 @@ class MenuBar extends React.Component {
                 id: 'tw.workspaceBookmarks.defaultCategory'
             });
         }
+        category = normalizeWorkspaceBookmarkCategory(category);
 
         const bookmark = {
             name: (name.trim() || this.props.intl.formatMessage({
@@ -2350,6 +2352,7 @@ class MenuBar extends React.Component {
                 newCategory = categoryInput.trim() || 'General';
             }
         }
+        newCategory = normalizeWorkspaceBookmarkCategory(newCategory);
 
         this.setState(prev => {
             const next = [...prev.workspaceBookmarks];

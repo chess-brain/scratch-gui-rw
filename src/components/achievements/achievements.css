@@ -175,6 +175,36 @@
     line-height: 1;
 }
 
+.categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    margin: 0 0 1rem;
+}
+
+.categories button {
+    background: $ui-secondary;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 999px;
+    color: $text-primary;
+    cursor: pointer;
+    font-size: .75rem;
+    padding: .35rem .6rem;
+}
+
+.categories button:hover,
+.categories .category-selected {
+    background: $looks-secondary;
+    border-color: $looks-secondary;
+    color: white;
+}
+
+.categories span {
+    font-variant-numeric: tabular-nums;
+    margin-left: .2rem;
+    opacity: .8;
+}
+
 .list {
     display: grid;
     gap: .65rem;
