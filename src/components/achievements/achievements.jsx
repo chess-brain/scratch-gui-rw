@@ -1,16 +1,22 @@
 import React, {useEffect, useState} from 'react';
+import Draggable from 'react-draggable';
 import {
     ACHIEVEMENTS,
+    getAchievementExperience,
     getUnlockedAchievementIds,
+    isAchievementsEnabled,
+    selectAchievementExperience,
     UNLOCK_EVENT,
     unlockAchievement
 } from '../../lib/achievements.js';
 import styles from './achievements.css';
 
-const Achievements = ({inMenu = false}) => {
+const Achievements = () => {
     const [unlockedIds, setUnlockedIds] = useState(() => getUnlockedAchievementIds());
     const [notice, setNotice] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [experience, setExperience] = useState(() => getAchievementExperience());
+    const [enabled, setEnabled] = useState(() => isAchievementsEnabled());
 
     useEffect(() => {
         const handleUnlock = event => {
@@ -24,22 +30,59 @@ const Achievements = ({inMenu = false}) => {
     }, []);
 
     useEffect(() => {
+        const handleOpen = () => {
+            if (isAchievementsEnabled()) {
+                unlockAchievement('achievement-hunter');
+                setIsOpen(true);
+            }
+        };
+        const handleSettingsChanged = event => {
+            setEnabled(event.detail.enabled);
+        };
+        window.addEventListener('rw-achievements-open', handleOpen);
+        window.addEventListener('rw-achievements-settings-changed', handleSettingsChanged);
+        return () => {
+            window.removeEventListener('rw-achievements-open', handleOpen);
+            window.removeEventListener('rw-achievements-settings-changed', handleSettingsChanged);
+        };
+    }, []);
+
+    useEffect(() => {
         if (!notice) return undefined;
         const timeout = setTimeout(() => setNotice(null), 4500);
         return () => clearTimeout(timeout);
     }, [notice]);
 
-    const openAchievements = () => {
-        unlockAchievement('achievement-hunter');
-        setIsOpen(true);
+    const chooseExperience = selectedExperience => {
+        selectAchievementExperience(selectedExperience);
+        setExperience(selectedExperience);
+        setEnabled(selectedExperience === 'sc-newbie');
     };
 
     return (
-        <div className={inMenu ? styles.menuRoot : styles.root}>
-            {notice && (
+        <div className={styles.root}>
+            {!experience && (
+                <div className={styles.backdrop}>
+                    <section aria-label="选择编辑器经验" className={styles.choicePanel}>
+                        <h2>欢迎使用 RemixWarp</h2>
+                        <p>请选择你的编辑器经验，以决定是否默认启用成就。</p>
+                        <div className={styles.choiceActions}>
+                            <button onClick={() => chooseExperience('sc-newbie')} type="button">
+                                <strong>SC 新手</strong>
+                                <small>自动开启成就</small>
+                            </button>
+                            <button onClick={() => chooseExperience('tw-veteran')} type="button">
+                                <strong>TW 老手</strong>
+                                <small>可在高级设置中开启成就</small>
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            )}
+            {enabled && notice && (
                 <button
                     className={styles.notice}
-                    onClick={openAchievements}
+                    onClick={() => window.dispatchEvent(new Event('rw-achievements-open'))}
                     type="button"
                 >
                     <span className={styles.noticeIcon}>🏆</span>
@@ -49,22 +92,13 @@ const Achievements = ({inMenu = false}) => {
                     </span>
                 </button>
             )}
-            <button
-                className={styles.trigger}
-                onClick={openAchievements}
-                title="成就"
-                type="button"
-            >
-                🏆
-            </button>
             {isOpen && (
-                <div className={styles.backdrop} onClick={() => setIsOpen(false)}>
+                <Draggable handle={`.${styles.windowHeader}`}>
                     <section
                         aria-label="成就"
                         className={styles.panel}
-                        onClick={event => event.stopPropagation()}
                     >
-                        <header>
+                        <header className={styles.windowHeader}>
                             <div>
                                 <h2>成就</h2>
                                 <p>{unlockedIds.length} / {ACHIEVEMENTS.length} 已解锁</p>
@@ -96,7 +130,7 @@ const Achievements = ({inMenu = false}) => {
                             })}
                         </div>
                     </section>
-                </div>
+                </Draggable>
             )}
         </div>
     );

@@ -76,6 +76,7 @@ import Onboarding from '../../containers/onboarding.jsx';
 import BlockCounter from '../../components/block-counter/block-counter.jsx';
 import {recordSponsorIntent} from '../../lib/achievements.js';
 import AchievementTracker from '../achievements/achievement-tracker.jsx';
+import Achievements from '../achievements/achievements.jsx';
 
 import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/constants/layout-constants';
 import {resolveStageSize} from '../../lib/utils/screen';
@@ -884,6 +885,7 @@ const GUIComponent = props => {
     const alwaysEnabledModals = useMemo(() => (
         <React.Fragment>
             <AchievementTracker vm={vm} />
+            <Achievements />
             <NotificationsProvider />
             <TWSecurityManager securityManager={securityManager} />
             <TWRestorePointManager />

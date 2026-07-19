@@ -538,8 +538,26 @@ export const ACHIEVEMENTS = [
 ];
 
 const STORAGE_KEY = 'rw:achievements';
+const ENABLED_STORAGE_KEY = 'rw:achievements-enabled';
+const EXPERIENCE_STORAGE_KEY = 'rw:achievement-experience';
 const UNLOCK_EVENT = 'rw-achievement-unlocked';
 let lowFramerateSince = null;
+
+export const getAchievementExperience = () => localStorage.getItem(EXPERIENCE_STORAGE_KEY);
+
+export const isAchievementsEnabled = () => localStorage.getItem(ENABLED_STORAGE_KEY) === 'true';
+
+export const setAchievementsEnabled = enabled => {
+    localStorage.setItem(ENABLED_STORAGE_KEY, String(Boolean(enabled)));
+    window.dispatchEvent(new CustomEvent('rw-achievements-settings-changed', {
+        detail: {enabled: Boolean(enabled)}
+    }));
+};
+
+export const selectAchievementExperience = experience => {
+    localStorage.setItem(EXPERIENCE_STORAGE_KEY, experience);
+    setAchievementsEnabled(experience === 'sc-newbie');
+};
 
 const getStoredIds = () => {
     try {
@@ -554,7 +572,7 @@ export const getUnlockedAchievementIds = () => getStoredIds();
 
 export const unlockAchievement = id => {
     const achievement = ACHIEVEMENTS.find(item => item.id === id);
-    if (!achievement || typeof window === 'undefined') return false;
+    if (!achievement || typeof window === 'undefined' || !isAchievementsEnabled()) return false;
 
     const unlockedIds = getStoredIds();
     if (unlockedIds.includes(id)) return false;

@@ -37,8 +37,7 @@ import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
 import TWNews from './tw-news.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
-import Achievements from '../achievements/achievements.jsx';
-import {unlockAchievement} from '../../lib/achievements.js';
+import {isAchievementsEnabled} from '../../lib/achievements.js';
 
 import TWDesktopSettings from './tw-desktop-settings.jsx';
 
@@ -165,7 +164,7 @@ import {
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, Settings, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Keyboard,
-    Zap, Gauge, BookOpen, Code
+    Zap, Gauge, BookOpen, Code, Trophy
 } from 'lucide-react';
 
 import sharedMessages from '../../lib/constants/shared-messages';
@@ -3623,6 +3622,17 @@ class MenuBar extends React.Component {
                                             id="mw.menuBar.git"
                                         />
                                     </MenuItem>
+                                    {isAchievementsEnabled() && (
+                                        <MenuItem
+                                            onClick={() => {
+                                                window.dispatchEvent(new Event('rw-achievements-open'));
+                                                this.props.onRequestCloseTools();
+                                            }}
+                                        >
+                                            <Trophy />
+                                            成就
+                                        </MenuItem>
+                                    )}
                                     <MenuItem
                                         expanded={this.props.aiMenuOpen}
                                     >
@@ -3948,7 +3958,6 @@ class MenuBar extends React.Component {
                 </div>
 
                 <div className={styles.accountInfoGroup}>
-                    <Achievements inMenu />
                     <TWSaveStatus
                         showSaveFilePicker={this.props.showSaveFilePicker}
                     />

@@ -92,7 +92,11 @@
     max-height: min(38rem, 85vh);
     overflow: auto;
     padding: 1.25rem;
+    position: fixed;
+    top: 10vh;
+    left: calc(50vw - 16rem);
     width: min(32rem, calc(100vw - 2rem));
+    z-index: 10001;
 }
 
 .panel header {
@@ -100,6 +104,55 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: 1rem;
+}
+
+.window-header {
+    cursor: move;
+    user-select: none;
+}
+
+.choice-panel {
+    background: $ui-modal-background;
+    border-radius: .75rem;
+    box-shadow: 0 12px 32px $shadow;
+    color: $ui-modal-foreground;
+    padding: 1.5rem;
+    width: min(34rem, calc(100vw - 2rem));
+}
+
+.choice-panel h2,
+.choice-panel p {
+    margin-top: 0;
+}
+
+.choice-actions {
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: repeat(2, 1fr);
+    margin-top: 1.25rem;
+}
+
+.choice-actions button {
+    background: $badge-background;
+    border: 1px solid $badge-border;
+    border-radius: .5rem;
+    color: $text-primary;
+    cursor: pointer;
+    padding: 1rem;
+    text-align: left;
+}
+
+.choice-actions button:hover {
+    filter: brightness(.95);
+}
+
+.choice-actions strong,
+.choice-actions small {
+    display: block;
+}
+
+.choice-actions small {
+    margin-top: .3rem;
 }
 
 .panel h2,
